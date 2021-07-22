@@ -3,7 +3,7 @@
 var argv = require("minimist")(process.argv.slice(3));
 
 const { getConfig } = require("./src/credentials");
-const { getGithubClient, Github } = require("./src/github");
+const { getGithubClient, getOriginRemote, Github } = require("./src/github");
 
 console.log(chalk.yellow(`Starting Github Client ${new Date().toISOString()}`));
 
@@ -12,7 +12,9 @@ console.log(chalk.yellow(`Starting Github Client ${new Date().toISOString()}`));
 
   const octokit = await getGithubClient(config.token);
 
-  const github = new Github(octokit);
+  const origin = await getOriginRemote();
+
+  const github = new Github(octokit, origin[0], origin[1]);
 
   const [mainCommand] = argv._;
 
@@ -22,11 +24,15 @@ console.log(chalk.yellow(`Starting Github Client ${new Date().toISOString()}`));
 
   switch (mainCommand) {
     case "pr": {
-      if (!withFlags) {
-        return await github.listPullRequest(
-          "pt-liferay-solutions",
-          "liferay-portal"
+      if (!sendTo) {
+        const owner = fromUser || github.owner;
+        const repo = github.repo;
+
+        console.log(
+          `Listing open pull requests on ${chalk.green(`${owner}/${repo}`)}`
         );
+
+        return await github.listPullRequest(owner, repo);
       }
 
       if (sendTo) {
@@ -34,6 +40,4 @@ console.log(chalk.yellow(`Starting Github Client ${new Date().toISOString()}`));
       }
     }
   }
-
-  console.log(argv);
 })();

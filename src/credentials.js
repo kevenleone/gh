@@ -1,12 +1,12 @@
-const configFile = "./config.json";
+const configFile = os.homedir() + "/.gh.github.json";
 
 async function saveCredentials(credentials) {
   await fs.writeFile(configFile, JSON.stringify(credentials));
 }
 
 async function askCredentials() {
-  let username = await question("What is your GitHub username ? ");
-  let token = await question("What is your GitHub token ?");
+  const username = await question("What is your GitHub username ? ");
+  const token = await question("What is your GitHub token ?");
 
   const credentials = { username, token };
 

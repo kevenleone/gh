@@ -8,9 +8,17 @@ async function getGithubClient(auth) {
   return octokit;
 }
 
+async function getOriginRemote() {
+  const remote_origin = await $`git config --get remote.origin.url`;
+
+  return remote_origin.stdout.replace(".git\n", "").split("/").slice(-2);
+}
+
 class Github {
-  constructor(octokit) {
+  constructor(octokit, owner, repo) {
     this.octokit = octokit;
+    this.owner = owner;
+    this.repo = repo;
   }
 
   async listPullRequest(owner, repo) {
@@ -19,15 +27,22 @@ class Github {
       repo,
     });
 
-    console.table(
-      pulls.data.map(({ number, title, user, created_at }) => ({
-        "#": `#${number}`,
-        Title: title,
-        Author: `@${user.login}`,
-        Opened: created_at,
-      }))
-    );
+    if (pulls.data.length) {
+      console.table(
+        pulls.data.map(({ number, state, title, user, created_at }) => ({
+          "#": `#${number}`,
+          Title: title,
+          Author: `@${user.login}`,
+          Opened: created_at,
+          Status: state.toUpperCase(),
+        }))
+      );
+    } else {
+      console.log("No Pull Request found");
+    }
   }
+
+  async createPullRequest() {}
 }
 
-module.exports = { getGithubClient, Github };
+module.exports = { getGithubClient, getOriginRemote, Github };
