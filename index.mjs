@@ -5,11 +5,12 @@ var argv = require("minimist")(process.argv.slice(3));
 const { getConfig, askConfiguration } = require("./src/credentials");
 const { getGithubClient, Github } = require("./src/github");
 const Git = require("./src/git");
+const ora = require("ora");
 const figlet = require("figlet");
 
 console.log(
-  figlet.textSync("Liferay Git", {
-    font: "Train",
+  figlet.textSync("GITRAY", {
+    font: "Big",
   })
 );
 

@@ -1,4 +1,5 @@
 const { Octokit } = require("@octokit/rest");
+const spinner = require("ora");
 
 const { openBrowser } = require("./utils");
 
@@ -26,9 +27,12 @@ class Github {
   async listPullRequest() {
     const { owner, repo } = this;
 
-    console.log(
+    const spin = spinner(
       `Listing open pull requests on ${chalk.green(`${owner}/${repo}`)}`
     );
+
+    spin.color = "green";
+    spin.start();
 
     const pulls = await this.octokit.rest.pulls.list({
       owner,
@@ -36,6 +40,8 @@ class Github {
     });
 
     if (pulls.data.length) {
+      spin.succeed();
+
       console.table(
         pulls.data.map(({ number, state, title, user, created_at }) => ({
           "#": `#${number}`,
@@ -46,7 +52,9 @@ class Github {
         }))
       );
     } else {
-      console.log("No Pull Request found");
+      spin.text = "No Pull Request found";
+      spin.warn();
+      // console.log("No Pull Request found");
     }
   }
 
