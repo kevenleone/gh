@@ -14,29 +14,27 @@ console.log(chalk.yellow(`Starting Github Client ${new Date().toISOString()}`));
 
   const origin = await getOriginRemote();
 
-  const github = new Github(octokit, origin[0], origin[1]);
+  const { s: sendTo, u: fromUser } = argv;
+
+  const github = new Github(octokit, {
+    me: config.username,
+    owner: origin[0],
+    repo: origin[1],
+    fromUser: fromUser || sendTo,
+  });
 
   const [mainCommand] = argv._;
-
-  const { s: sendTo, u: fromUser } = argv;
 
   const withFlags = argv.s || argv.u;
 
   switch (mainCommand) {
     case "pr": {
-      if (!sendTo) {
-        const owner = fromUser || github.owner;
-        const repo = github.repo;
-
-        console.log(
-          `Listing open pull requests on ${chalk.green(`${owner}/${repo}`)}`
-        );
-
-        return await github.listPullRequest(owner, repo);
+      if (sendTo) {
+        github.createPullRequest();
       }
 
-      if (sendTo) {
-        console.log("Enviando PR para", sendTo);
+      if (!sendTo) {
+        return await github.listPullRequest(fromUser);
       }
     }
   }

@@ -1,5 +1,7 @@
 const { Octokit } = require("@octokit/rest");
 
+const { openBrowser } = require("./utils");
+
 async function getGithubClient(auth) {
   const octokit = new Octokit({
     auth,
@@ -15,13 +17,32 @@ async function getOriginRemote() {
 }
 
 class Github {
-  constructor(octokit, owner, repo) {
+  constructor(octokit, { me, owner, repo, fromUser }) {
     this.octokit = octokit;
-    this.owner = owner;
+    this.me = me;
+    this.owner = fromUser || owner;
     this.repo = repo;
   }
 
-  async listPullRequest(owner, repo) {
+  async getActualBranch() {
+    const branch = await $`git branch --show-current`;
+
+    return branch.stdout.trim();
+  }
+
+  async getLastCommitMessage() {
+    const commitMessage = await $`git show-branch --no-name HEAD`;
+
+    return commitMessage.stdout.replace("\n", "");
+  }
+
+  async listPullRequest() {
+    const { owner, repo } = this;
+
+    console.log(
+      `Listing open pull requests on ${chalk.green(`${owner}/${repo}`)}`
+    );
+
     const pulls = await this.octokit.rest.pulls.list({
       owner,
       repo,
@@ -42,7 +63,42 @@ class Github {
     }
   }
 
-  async createPullRequest() {}
+  async push(branch) {
+    await $`git push --set-upstream origin ${branch}`;
+  }
+
+  async createPullRequest() {
+    const head = await this.getActualBranch();
+    const title = await this.getLastCommitMessage();
+
+    console.log("Enviando PR para", this.owner, head);
+
+    await this.push(head);
+
+    const payload = {
+      title,
+      owner: this.owner,
+      repo: this.repo,
+      head: `${this.me}:${head}`,
+      base: "master",
+    };
+
+    try {
+      const {
+        data: { number },
+      } = await this.octokit.rest.pulls.create(payload);
+
+      console.log(
+        `Pull Request Sent To: ${chalk.green(`${this.owner}/${this.repo}`)}`
+      );
+
+      openBrowser(
+        `https://github.com/${this.owner}/${this.repo}/pull/${number}`
+      );
+    } catch (err) {
+      console.log("Error to Send PR", err);
+    }
+  }
 }
 
 module.exports = { getGithubClient, getOriginRemote, Github };
