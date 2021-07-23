@@ -13,11 +13,13 @@ async function getGithubClient(auth) {
 }
 
 class Github {
-  constructor(octokit, { me, owner, repo, fromUser }) {
+  constructor(octokit, { argv, config, owner, repo, fromUser }) {
+    this.argv = argv;
+    this.config = config;
     this.octokit = octokit;
     this.ssh = false;
-    this.me = me;
-    this.owner = fromUser || owner || me;
+    this.me = config.username;
+    this.owner = fromUser || owner || this.username;
     this.repo = repo;
   }
 
@@ -59,7 +61,7 @@ class Github {
 
     const { data } = await this.octokit.rest.pulls.get(payload);
 
-    const newBranch = `gt-pr-${data.number}`;
+    const newBranch = `${this.config.branch_prefix}${data.number}`;
     const headBranch = data.head.ref;
     const repoUrl = this.ssh
       ? data.head.repo.ssh_url
@@ -74,7 +76,7 @@ class Github {
 
   async createComment(issue_number) {
     const payload = {
-      body: "Just starting reviewing :)",
+      body: this.config.review_signature || "Just starting reviewing :)",
       issue_number,
       repo: this.repo,
       owner: this.owner,
@@ -98,7 +100,7 @@ class Github {
       owner: this.owner,
       repo: this.repo,
       head: `${this.me}:${head}`,
-      base: "master",
+      base: this.argv.base || "master",
     };
 
     try {
@@ -114,7 +116,7 @@ class Github {
         `https://github.com/${this.owner}/${this.repo}/pull/${number}`
       );
     } catch (err) {
-      console.log("Error to Send PR", err);
+      console.log("Error to Send PR", err.message);
     }
   }
 }

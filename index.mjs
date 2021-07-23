@@ -2,11 +2,16 @@
 
 var argv = require("minimist")(process.argv.slice(3));
 
-const { getConfig } = require("./src/credentials");
+const { getConfig, askConfiguration } = require("./src/credentials");
 const { getGithubClient, Github } = require("./src/github");
 const Git = require("./src/git");
+const figlet = require("figlet");
 
-console.log(chalk.yellow(`Starting Github Client ${new Date().toISOString()}`));
+console.log(
+  figlet.textSync("Liferay Git", {
+    font: "Train",
+  })
+);
 
 (async () => {
   const config = await getConfig();
@@ -18,7 +23,8 @@ console.log(chalk.yellow(`Starting Github Client ${new Date().toISOString()}`));
   const { s: sendTo, u: fromUser } = argv;
 
   const github = new Github(octokit, {
-    me: config.username,
+    argv,
+    config,
     owner: origin[0],
     repo: origin[1],
     fromUser: fromUser || sendTo,
@@ -39,6 +45,18 @@ console.log(chalk.yellow(`Starting Github Client ${new Date().toISOString()}`));
 
         await github.listPullRequest(fromUser);
       }
+
+      break;
+    }
+
+    case "config": {
+      await askConfiguration(config);
+      break;
+    }
+
+    case "info": {
+      console.log("teste");
+      break;
     }
   }
 })();
