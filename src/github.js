@@ -2,6 +2,8 @@ const { Octokit } = require("@octokit/rest");
 
 const { openBrowser } = require("./utils");
 
+const Git = require("./git");
+
 async function getGithubClient(auth) {
   const octokit = new Octokit({
     auth,
@@ -10,30 +12,13 @@ async function getGithubClient(auth) {
   return octokit;
 }
 
-async function getOriginRemote() {
-  const remote_origin = await $`git config --get remote.origin.url`;
-
-  return remote_origin.stdout.replace(".git\n", "").split("/").slice(-2);
-}
-
 class Github {
   constructor(octokit, { me, owner, repo, fromUser }) {
     this.octokit = octokit;
+    this.ssh = false;
     this.me = me;
-    this.owner = fromUser || owner;
+    this.owner = fromUser || owner || me;
     this.repo = repo;
-  }
-
-  async getActualBranch() {
-    const branch = await $`git branch --show-current`;
-
-    return branch.stdout.trim();
-  }
-
-  async getLastCommitMessage() {
-    const commitMessage = await $`git show-branch --no-name HEAD`;
-
-    return commitMessage.stdout.replace("\n", "");
   }
 
   async listPullRequest() {
@@ -63,17 +48,50 @@ class Github {
     }
   }
 
-  async push(branch) {
-    await $`git push --set-upstream origin ${branch}`;
+  async fetchPullRequest(pull_number) {
+    const payload = {
+      pull_number,
+      repo: this.repo,
+      owner: this.user || this.me,
+    };
+
+    console.log("Fetching Pull Request");
+
+    const { data } = await this.octokit.rest.pulls.get(payload);
+
+    const newBranch = `gt-pr-${data.number}`;
+    const headBranch = data.head.ref;
+    const repoUrl = this.ssh
+      ? data.head.repo.ssh_url
+      : data.head.repo.clone_url;
+
+    await Git.fetch(repoUrl, headBranch, newBranch);
+
+    await this.createComment(data.number);
+
+    await Git.checkout(newBranch);
+  }
+
+  async createComment(issue_number) {
+    const payload = {
+      body: "Just starting reviewing :)",
+      issue_number,
+      repo: this.repo,
+      owner: this.owner,
+    };
+
+    await this.octokit.issues.createComment(payload);
+
+    console.log(`Add comment: ${chalk.blue(payload.body)}`);
   }
 
   async createPullRequest() {
-    const head = await this.getActualBranch();
-    const title = await this.getLastCommitMessage();
+    const head = await Git.getActualBranch();
+    const title = await Git.getLastCommitMessage();
 
-    console.log("Enviando PR para", this.owner, head);
+    console.log(`Sending PR to ${this.owner}`);
 
-    await this.push(head);
+    await Git.push(head);
 
     const payload = {
       title,
@@ -101,4 +119,4 @@ class Github {
   }
 }
 
-module.exports = { getGithubClient, getOriginRemote, Github };
+module.exports = { getGithubClient, Github };

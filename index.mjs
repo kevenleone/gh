@@ -3,7 +3,8 @@
 var argv = require("minimist")(process.argv.slice(3));
 
 const { getConfig } = require("./src/credentials");
-const { getGithubClient, getOriginRemote, Github } = require("./src/github");
+const { getGithubClient, Github } = require("./src/github");
+const Git = require("./src/git");
 
 console.log(chalk.yellow(`Starting Github Client ${new Date().toISOString()}`));
 
@@ -12,7 +13,7 @@ console.log(chalk.yellow(`Starting Github Client ${new Date().toISOString()}`));
 
   const octokit = await getGithubClient(config.token);
 
-  const origin = await getOriginRemote();
+  const origin = await Git.getOriginRemote();
 
   const { s: sendTo, u: fromUser } = argv;
 
@@ -23,7 +24,7 @@ console.log(chalk.yellow(`Starting Github Client ${new Date().toISOString()}`));
     fromUser: fromUser || sendTo,
   });
 
-  const [mainCommand] = argv._;
+  const [mainCommand, secondCommand] = argv._;
 
   const withFlags = argv.s || argv.u;
 
@@ -31,10 +32,12 @@ console.log(chalk.yellow(`Starting Github Client ${new Date().toISOString()}`));
     case "pr": {
       if (sendTo) {
         github.createPullRequest();
-      }
+      } else {
+        if (secondCommand) {
+          return await github.fetchPullRequest(secondCommand);
+        }
 
-      if (!sendTo) {
-        return await github.listPullRequest(fromUser);
+        await github.listPullRequest(fromUser);
       }
     }
   }
