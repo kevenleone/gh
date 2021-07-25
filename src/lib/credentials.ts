@@ -6,7 +6,7 @@ import { Configuration } from "../interfaces/types";
 
 const configFile = os.homedir() + "/.gh.github.json";
 
-async function saveConfiguration(configuration: Configuration) {
+async function saveConfiguration(configuration: Configuration | any) {
   await fs.writeFile(configFile, JSON.stringify(configuration));
 }
 
@@ -68,4 +68,24 @@ async function getConfig(): Promise<Configuration> {
   return credentials;
 }
 
-export { getConfig, askConfiguration };
+async function saveProjectConfig(
+  project: string,
+  remote: string,
+  defaultOrigins: string[] = []
+): Promise<void> {
+  const config: any = await getConfig();
+
+  if (!config[project]) {
+    config[project] = {
+      remotes: defaultOrigins,
+    };
+  }
+
+  if (!config[project].remotes.includes(remote)) {
+    config[project].remotes.push(remote);
+  }
+
+  await saveConfiguration(config);
+}
+
+export { getConfig, saveProjectConfig, askConfiguration };

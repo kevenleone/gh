@@ -1,11 +1,18 @@
 /// <reference types="zx"/>
 
-import { Octokit } from "@octokit/rest";
+import { Octokit, RestEndpointMethodTypes } from "@octokit/rest";
 import spinner from "ora";
 
-import { GithubOptions } from "../interfaces/types";
+import { ApplicationProperties } from "../interfaces/types";
 import Git from "./git";
 import { openBrowser } from "./utils";
+
+interface PullRequestConfig {
+  base?: string;
+  owner?: string;
+  repo?: string;
+  title?: string;
+}
 
 async function getGithubClient(auth: string): Promise<Octokit> {
   const octokit = new Octokit({
@@ -22,13 +29,12 @@ class Github {
   private me: string;
   private owner: string;
   private repo: string;
-  private argv: any;
 
-  constructor(
-    octokit: Octokit,
-    { argv, config, fromUser, owner, repo }: GithubOptions
-  ) {
-    this.argv = argv;
+  constructor(applicationProperties: ApplicationProperties) {
+    const {
+      config: { config, fromUser, owner, repo },
+      octokit,
+    } = applicationProperties;
     this.config = config;
     this.octokit = octokit;
     this.ssh = false;
@@ -37,7 +43,9 @@ class Github {
     this.repo = repo;
   }
 
-  async listPullRequest(): Promise<void> {
+  async listPullRequest(
+    showTable: boolean
+  ): Promise<RestEndpointMethodTypes["pulls"]["list"]["response"]["data"]> {
     const { owner, repo } = this;
 
     const spin = spinner(
@@ -55,20 +63,23 @@ class Github {
     if (pulls.data.length) {
       spin.succeed();
 
-      console.table(
-        pulls.data.map(({ created_at, number, state, title, user }) => ({
-          "#": `#${number}`,
-          Author: `@${user?.login}`,
-          Opened: created_at,
-          Status: state.toUpperCase(),
-          Title: title,
-        }))
-      );
+      if (showTable) {
+        console.table(
+          pulls.data.map(({ created_at, number, state, title, user }) => ({
+            "#": `#${number}`,
+            Author: `@${user?.login}`,
+            Opened: created_at,
+            Status: state.toUpperCase(),
+            Title: title,
+          }))
+        );
+      }
     } else {
       spin.text = "No Pull Request found";
       spin.warn();
-      // console.log("No Pull Request found");
     }
+
+    return pulls.data;
   }
 
   async fetchPullRequest(pull_number: number): Promise<void> {
@@ -105,20 +116,17 @@ class Github {
 
     await this.octokit.issues.createComment(payload);
 
-    console.log(`Add comment: ${chalk.blue(payload.body)}`);
+    console.log(`Added comment: ${chalk.blue(payload.body)}`);
   }
 
-  async createPullRequest(): Promise<void> {
-    const head = await Git.getActualBranch();
-    const title = await Git.getLastCommitMessage();
-
-    console.log(`Sending PR to ${this.owner}`);
-
-    await Git.push(head);
-
+  async openPullRequest(
+    title: string,
+    actualBranch: string,
+    referenceBranch: string
+  ): Promise<void> {
     const payload = {
-      base: this.argv.base || "master",
-      head: `${this.me}:${head}`,
+      base: referenceBranch,
+      head: `${this.me}:${actualBranch}`,
       owner: this.owner,
       repo: this.repo,
       title,
@@ -136,6 +144,54 @@ class Github {
       openBrowser(
         `https://github.com/${this.owner}/${this.repo}/pull/${number}`
       );
+    } catch (err) {
+      console.log("Error to Send PR", err.message);
+    }
+  }
+
+  async createPullRequest(pullRequestConfig: PullRequestConfig): Promise<void> {
+    const head = await Git.getActualBranch();
+
+    if (!pullRequestConfig.title) {
+      pullRequestConfig.title = await Git.getLastCommitMessage();
+    }
+
+    if (!pullRequestConfig.repo) {
+      pullRequestConfig.repo = this.repo;
+    }
+
+    if (!pullRequestConfig.owner) {
+      pullRequestConfig.owner = this.owner;
+    }
+
+    if (!pullRequestConfig.base) {
+      pullRequestConfig.base = await Git.getDefaultBranch();
+    }
+
+    const payload = {
+      base: pullRequestConfig.base,
+      head: `${this.me}:${head}`,
+      owner: pullRequestConfig.owner,
+      repo: pullRequestConfig.repo,
+      title: pullRequestConfig.title,
+    };
+
+    console.log({ payload });
+
+    return;
+
+    await Git.push(head);
+
+    try {
+      const {
+        data: { number },
+      } = await this.octokit.rest.pulls.create(payload);
+
+      const delivered_to = `${pullRequestConfig.owner}/${pullRequestConfig.repo}`;
+
+      console.log(`Pull Request Sent To: ${chalk.green(delivered_to)}`);
+
+      openBrowser(`https://github.com/${delivered_to}/pull/${number}`);
     } catch (err) {
       console.log("Error to Send PR", err.message);
     }

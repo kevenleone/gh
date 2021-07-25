@@ -1,66 +1,68 @@
 #!/usr/bin/env zx
 
-/// <reference types="zx"/>
-
 import figlet from "figlet";
 import minimist from "minimist";
 
-import { askConfiguration, getConfig } from "./lib/credentials";
+import CommandLine from "./lib/cli";
+import { getConfig } from "./lib/credentials";
 import Git from "./lib/git";
-import { getGithubClient, Github } from "./lib/github";
+import { getGithubClient } from "./lib/github";
 
 const argv = minimist(process.argv.slice(3));
 
-console.log(
-  figlet.textSync("GITRAY", {
-    font: "Big",
-  })
-);
+/**
+ * @description If you want to see what happens under the hoods, use the flag --verbose
+ */
 
-(async () => {
-  const config = await getConfig();
+$.verbose = !!argv.verbose;
 
-  const octokit = await getGithubClient(config.token);
+class Application {
+  /**
+   * @description Just a ASCII Art
+   */
 
-  const origin = await Git.getOriginRemote();
-
-  const { s: sendTo, u: fromUser } = argv;
-
-  const github = new Github(octokit, {
-    argv,
-    config,
-    fromUser: fromUser || sendTo,
-    owner: origin[0],
-    repo: origin[1],
-  });
-
-  const [mainCommand, secondCommand] = argv._;
-
-  // const withFlags = argv.s || argv.u;
-
-  switch (mainCommand) {
-    case "pr": {
-      if (sendTo) {
-        github.createPullRequest();
-      } else {
-        if (secondCommand) {
-          return await github.fetchPullRequest(Number(secondCommand));
-        }
-
-        await github.listPullRequest();
-      }
-
-      break;
-    }
-
-    case "config": {
-      await askConfiguration(config);
-      break;
-    }
-
-    case "info": {
-      console.log("teste");
-      break;
-    }
+  private welcome(): void {
+    console.log(
+      figlet.textSync("GitRay", {
+        font: "Big",
+      })
+    );
   }
-})();
+
+  /**
+   * @description The principal workflow of the Application is here
+   * Also, the SETUP and configurations are made here and used in all application
+   */
+
+  public async run(): Promise<void> {
+    this.welcome();
+
+    const config = await getConfig();
+
+    const [octokit, origin] = await Promise.all([
+      getGithubClient(config.token),
+      Git.getOriginRemote(),
+    ]);
+
+    const { s: sendTo, u: fromUser } = argv;
+
+    const applicationProperties = {
+      config: {
+        argv,
+        config,
+        fromUser: fromUser || sendTo,
+        owner: origin[0],
+        repo: origin[1],
+      },
+      octokit,
+    };
+
+    const cli = new CommandLine(applicationProperties);
+
+    await cli.showCommands();
+  }
+}
+
+const application = new Application();
+
+application.run();
