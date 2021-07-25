@@ -4,10 +4,11 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
+    "build": "./scripts/build.sh",
     "lint": "eslint --ext ts",
     "postinstall": "npm run build",
     "start": "./dist/index.js",
-    "build": "./scripts/build.sh"
+    "watch": "tsc -w"
   },
   "dependencies": {
     "@octokit/rest": "^18.7.0",
