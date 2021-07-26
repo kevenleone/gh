@@ -171,43 +171,47 @@ class CommandLine {
       case "list-pr": {
         const data = await this.github.listPullRequest(true);
 
-        const { confirm_select_pr } = await prompts(
-          this.commandsList.pull_request.list_pr.confirm_to_select_pr,
-          promptConfig
-        );
-
-        this.logShortcut("gt pr -u username");
-
-        if (confirm_select_pr) {
-          const list_pr_answer = await prompts(
-            [
-              {
-                ...this.commandsList.get_pull_request_id,
-                choices: [
-                  ...data.map(({ number, title }) => ({
-                    title: `#${number}: ${title}`,
-                    value: number,
-                  })),
-                  {
-                    title: "I want to insert the Pull Request ID",
-                    value: "request-id",
-                  },
-                ],
-              },
-              {
-                message: "Pull Request ID",
-                name: "pull_request_id_2",
-                type: (prev) => (prev === "request-id" ? "number" : null),
-              },
-            ],
+        if (data.length) {
+          const { confirm_select_pr } = await prompts(
+            this.commandsList.pull_request.list_pr.confirm_to_select_pr,
             promptConfig
           );
 
-          const pull_request_id = list_pr_answer.pull_request_id_2
-            ? list_pr_answer.pull_request_id_2
-            : list_pr_answer.pull_request_id_1;
+          this.logShortcut("gt pr -u username");
 
-          this.github.fetchPullRequest(pull_request_id);
+          if (confirm_select_pr) {
+            const list_pr_answer = await prompts(
+              [
+                {
+                  ...this.commandsList.get_pull_request_id,
+                  choices: [
+                    ...data.map(({ number, title }) => ({
+                      title: `#${number}: ${title}`,
+                      value: number,
+                    })),
+                    {
+                      title: "I want to insert the Pull Request ID",
+                      value: "request-id",
+                    },
+                  ],
+                },
+                {
+                  message: "Pull Request ID",
+                  name: "pull_request_id_2",
+                  type: (prev) => (prev === "request-id" ? "number" : null),
+                },
+              ],
+              promptConfig
+            );
+
+            const pull_request_id = list_pr_answer.pull_request_id_2
+              ? list_pr_answer.pull_request_id_2
+              : list_pr_answer.pull_request_id_1;
+
+            this.github.fetchPullRequest(pull_request_id);
+
+            this.logShortcut(`gt pr -u ${pull_request_id} `);
+          }
         }
 
         break;

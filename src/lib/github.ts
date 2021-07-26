@@ -1,11 +1,10 @@
-/// <reference types="zx"/>
-
 import { Octokit, RestEndpointMethodTypes } from "@octokit/rest";
+import Table from "cli-table3";
 import spinner from "ora";
 
 import { ApplicationProperties } from "../interfaces/types";
 import Git from "./git";
-import { openBrowser } from "./utils";
+import { getTimeFromNow, openBrowser } from "./utils";
 
 interface PullRequestConfig {
   base?: string;
@@ -64,15 +63,22 @@ class Github {
       spin.succeed();
 
       if (showTable) {
-        console.table(
-          pulls.data.map(({ created_at, number, state, title, user }) => ({
-            "#": `#${number}`,
-            Author: `@${user?.login}`,
-            Opened: created_at,
-            Status: state.toUpperCase(),
-            Title: title,
-          }))
-        );
+        const table = new Table({
+          head: ["#", "Author", "Opened", "Status", "Title"],
+          style: { head: ["cyan"] },
+        });
+
+        pulls.data.forEach(({ created_at, number, state, title, user }) => {
+          table.push([
+            `#${number}`,
+            `@${user?.login}`,
+            getTimeFromNow(created_at),
+            state.toUpperCase(),
+            title,
+          ]);
+        });
+
+        console.log(table.toString());
       }
     } else {
       spin.text = "No Pull Request found";
@@ -96,10 +102,10 @@ class Github {
     const newBranch = `${this.config.branch_prefix}${data.number}`;
     const headBranch = data.head.ref;
     const repoUrl = this.ssh
-      ? data.head.repo.ssh_url
-      : data.head.repo.clone_url;
+      ? data?.head?.repo?.ssh_url
+      : data?.head?.repo?.clone_url;
 
-    await Git.fetch(repoUrl, headBranch, newBranch);
+    await Git.fetch(repoUrl || "", headBranch, newBranch);
 
     await this.createComment(data.number);
 
@@ -175,10 +181,6 @@ class Github {
       repo: pullRequestConfig.repo,
       title: pullRequestConfig.title,
     };
-
-    console.log({ payload });
-
-    return;
 
     await Git.push(head);
 
