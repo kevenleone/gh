@@ -1,8 +1,9 @@
 {
-  "name": "gh-github",
+  "name": "gitray",
   "version": "1.0.0",
   "main": "index.js",
   "license": "MIT",
+  "author": "Keven Leone <keven.leone@liferay.com>",
   "scripts": {
     "build": "./scripts/build.sh",
     "lint": "eslint --ext ts",
@@ -12,10 +13,15 @@
   },
   "dependencies": {
     "@octokit/rest": "^18.7.0",
+    "cli-table3": "^0.6.0",
+    "dayjs": "^1.10.6",
     "figlet": "^1.5.0",
     "ora": "^5.4.1",
     "prompts": "^2.4.1",
     "zx": "^2.0.0"
+  },
+  "engines": {
+    "node": ">= 14"
   },
   "devDependencies": {
     "@types/figlet": "^1.5.4",
