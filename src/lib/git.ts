@@ -7,19 +7,33 @@ class Git {
     return remote_origin.stdout.replace(".git\n", "").split("/").slice(-2);
   }
 
-  async getOrigins(): Promise<string[]> {
-    const list_of_remotes = await $`git remote -v | grep fetch`;
+  async getBranchesFromRemote(remoteName: string): Promise<string[]> {
+    const remoteBranches = await $`git ls-remote --heads ${remoteName}`;
 
-    const remote_list = list_of_remotes.stdout
+    const clearBranches = remoteBranches.stdout
       .split("\n")
       .map((remote) => remote.split("\t")[1])
-      .filter(Boolean)
+      .filter(Boolean);
+
+    return clearBranches;
+  }
+
+  async getOrigins(): Promise<{ name: string; alias: string }[]> {
+    const listOfRemotes = await $`git remote -v | grep fetch`;
+
+    const remoteList = listOfRemotes.stdout
+      .split("\n")
+      .map((remote) => remote.split("\t"))
+      .filter((remote) => remote.every(Boolean))
       .map((remote) => {
-        const new_remote = remote && remote.replace(" (fetch)", "").split("/");
-        return new_remote[new_remote.length - 2];
+        const [alias, remoteLink] = remote;
+        const new_remote =
+          remoteLink && remoteLink.replace(" (fetch)", "").split("/");
+
+        return { alias, name: new_remote[new_remote.length - 2] };
       });
 
-    return remote_list;
+    return remoteList;
   }
 
   async getDefaultBranch(): Promise<string> {

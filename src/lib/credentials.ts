@@ -71,7 +71,7 @@ async function getConfig(): Promise<Configuration> {
 async function saveProjectConfig(
   project: string,
   remote: string,
-  defaultOrigins: string[] = []
+  defaultOrigins: { alias: string; name: string }[] = []
 ): Promise<void> {
   const config: any = await getConfig();
 

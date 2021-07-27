@@ -28,13 +28,15 @@ class CommandLine {
       },
       onboard: {
         choices: [
+          { title: "Configuration", value: "config" },
+          { title: "Fetch", value: "fetch" },
+          { title: "Issues", value: "issues" },
           {
             description: "This option has a description",
             title: "Pull Request",
             value: "pr",
           },
-          { title: "Issues", value: "issues" },
-          { title: "Configuration", value: "config" },
+          { title: "Sync", value: "sync" },
         ],
         initial: 0,
         message: "Which Action do you want to perform?",
@@ -126,6 +128,48 @@ class CommandLine {
         command
       )}`
     );
+  }
+
+  private async workflowForFetchDry(): Promise<void> {
+    console.log("wow");
+  }
+
+  private async workflowForFetchOnboard(): Promise<void> {
+    const origins = await this.git.getOrigins();
+
+    const { remoteName } = await prompts(
+      {
+        ...this.commandsList.pull_request.send_pr.to,
+        choices: [
+          ...origins
+            .sort((a, b) => a.alias.localeCompare(b.alias))
+            .map((origin) => ({
+              title: `${origin.name} ${
+                origin.name !== origin.alias ? `(${origin.alias})` : ""
+              }`,
+              value: origin.alias,
+            })),
+          {
+            title: "Add New Remote",
+            value: "other",
+          },
+        ],
+        message: "Do you want to fetch from",
+        name: "remoteName",
+      },
+      promptConfig
+    );
+
+    const branches = await this.git.getBranchesFromRemote(remoteName);
+
+    await prompts({
+      choices: branches.map((branch) => ({
+        title: branch.replace("refs/heads/", ""),
+      })),
+      message: `Pick the Branch from ${remoteName}:`,
+      name: "send_pr_to",
+      type: "autocomplete",
+    });
   }
 
   private async workflowForPullRequestDry(): Promise<void> {
@@ -241,10 +285,10 @@ class CommandLine {
               ...this.commandsList.pull_request.send_pr.to,
               choices: [
                 ...origins
-                  .sort((a, b) => a.localeCompare(b))
+                  .sort((a, b) => a.name.localeCompare(b.name))
                   .map((origin) => ({
-                    title: origin,
-                    value: origin,
+                    title: origin.name,
+                    value: origin.name,
                   })),
                 {
                   title: "Other",
@@ -333,37 +377,51 @@ class CommandLine {
       action = response.value;
     }
 
-    switch (action) {
-      case "pr": {
-        await this.execWorkflow(
-          withOnboardWorkflow,
-          this.workflowForPullRequestDry.bind(this),
-          this.workflowForPullRequestOnboard.bind(this)
-        );
-        break;
+    try {
+      switch (action) {
+        case "pr": {
+          await this.execWorkflow(
+            withOnboardWorkflow,
+            this.workflowForPullRequestDry.bind(this),
+            this.workflowForPullRequestOnboard.bind(this)
+          );
+          break;
+        }
+
+        case "fetch": {
+          await this.execWorkflow(
+            withOnboardWorkflow,
+            this.workflowForFetchDry.bind(this),
+            this.workflowForFetchOnboard.bind(this)
+          );
+
+          break;
+        }
+
+        case "issues": {
+          console.log("Issues");
+
+          break;
+        }
+
+        case "config": {
+          await askConfiguration(this.applicationProperties.config.config);
+
+          break;
+        }
+
+        case "sync": {
+          console.log("Sync");
+          break;
+        }
+
+        default: {
+          console.log("Byee");
+          break;
+        }
       }
-
-      case "issues": {
-        console.log("Issues");
-
-        break;
-      }
-
-      case "config": {
-        await askConfiguration(this.applicationProperties.config.config);
-
-        break;
-      }
-
-      case "sync": {
-        console.log("Sync");
-        break;
-      }
-
-      default: {
-        console.log("Byee");
-        break;
-      }
+    } catch (err) {
+      console.log("ERexx", err);
     }
   }
 }
