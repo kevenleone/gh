@@ -274,7 +274,10 @@ class CommandLine {
         const projectConfig = myConfig[repo];
 
         if (projectConfig) {
-          origins = projectConfig.remotes;
+          origins = projectConfig.remotes?.map((origin: string) => ({
+            alias: origin,
+            name: origin,
+          }));
         }
 
         const last_commit = await this.git.getLastCommitMessage();
