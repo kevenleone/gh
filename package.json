@@ -5,6 +5,7 @@
   "license": "MIT",
   "author": "Keven Leone <keven.leone@liferay.com>",
   "scripts": {
+    "add-alias": "./scripts/add-aliases.mjs",
     "build": "./scripts/build.sh",
     "lint": "eslint --ext ts",
     "postinstall": "npm run build",
