@@ -21,6 +21,7 @@ Actually, this project has some inspiration with Node-GH.
 ## :book: Requirement
 
 Node.js >= `14.8.0`
+Git >= `1.7.0`
 
 ## :zap: Install
 
@@ -36,6 +37,31 @@ Note: **Be careful to not asign an alias already in use in your computer**, such
 
 Before configure this part, verify if the alias you want aren't in use.
 
+## :gear: Configuration
+
+After everything setup, open a terminal of your preference and type with the alias used in `add-alias` step, like this;
+
+![First access configuration](./images/config.png)
+
+You need to fill some fields;
+* **What is your GitHub username**: Is the user you're signed in.
+* **What is your GitHub Signature**: This Signature is used when you are fetching a PR from someone and a message is added there.
+* **What is your GitHub Token**: You need to create a GitHub Personal Access Token for this. Follow these steps:
+  * Login in your Github Account
+  * Go to this page: https://github.com/settings/tokens
+  * Generate new token
+  * ![Generate Token](./images/generate-token.png)
+  * Put a fancy name, on Note Input
+  * Put expiration date you want, I suggest to choose a longer expiration date, or no expiration for this.
+  * On Select Scopes, check all the boxes inside **repo**
+  * On the bottom, click on Generate Token
+  * After generate a token, you'll be redirect to other screen, copy the generated token inside the green box, and use as GitHub Token in this CLI.
+  * ![Generated Token](./images/generated-token.png)
+* **What is your Branch Prefix**: Whenever you fetch a PR from someone, a branch is created using this prefix and the Pull Request ID, if you are fetching the **100** from `pt-liferay-solutions/liferay-portal` a branch called **pr-100** will be created.
+
+And after the first access configuration, this will'be the first screen
+
+![First access configuration](./images/home.png)
 ## :handshake: **Contributing**
 If you liked the project and want to cooperate feel free to fork this repository and send Pull Requests.
 
