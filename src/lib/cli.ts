@@ -1,10 +1,8 @@
-import prompts from "prompts";
-
 import { ApplicationProperties } from "../interfaces/types";
 import { askConfiguration, saveProjectConfig } from "./credentials";
 import { Git } from "./git";
 import { Github } from "./github";
-import { promptConfig } from "./utils";
+import { prompts } from "./utils";
 
 class CommandLine {
   private applicationProperties: ApplicationProperties;
@@ -32,28 +30,25 @@ class CommandLine {
   private async workflowForFetchOnboard(): Promise<void> {
     const origins = await this.git.getOrigins();
 
-    const { remoteName } = await prompts(
-      {
-        choices: [
-          ...origins
-            .sort((a, b) => a.alias.localeCompare(b.alias))
-            .map((origin) => ({
-              title: `${origin.name} ${
-                origin.name !== origin.alias ? `(${origin.alias})` : ""
-              }`,
-              value: origin.alias,
-            })),
-          {
-            title: "Add New Remote",
-            value: "other",
-          },
-        ],
-        message: "Do you want to fetch from",
-        name: "remoteName",
-        type: "autocomplete",
-      },
-      promptConfig
-    );
+    const { remoteName } = await prompts({
+      choices: [
+        ...origins
+          .sort((a, b) => a.alias.localeCompare(b.alias))
+          .map((origin) => ({
+            title: `${origin.name} ${
+              origin.name !== origin.alias ? `(${origin.alias})` : ""
+            }`,
+            value: origin.alias,
+          })),
+        {
+          title: "Add New Remote",
+          value: "other",
+        },
+      ],
+      message: "Do you want to fetch from",
+      name: "remoteName",
+      type: "autocomplete",
+    });
 
     const branches = await this.git.getBranchesFromRemote(remoteName);
 
@@ -88,43 +83,37 @@ class CommandLine {
   }
 
   private async workflowForPullRequestOnboard(): Promise<void> {
-    const response = await prompts(
-      {
-        choices: [
-          {
-            description: "Get one specific Pull Request from someone",
-            title: "Get",
-            value: "get-pr",
-          },
-          {
-            description: "List Pull Requests from someone",
-            title: "List",
-            value: "list-pr",
-          },
-          {
-            description: "Send Pull Request to someone",
-            title: "Send",
-            value: "send-pr",
-          },
-        ],
-        initial: 0,
-        message: "Which Command do you want to perform for Pull Request?",
-        name: "value",
-        type: "select",
-      },
-      promptConfig
-    );
+    const response = await prompts({
+      choices: [
+        {
+          description: "Get one specific Pull Request from someone",
+          title: "Get",
+          value: "get-pr",
+        },
+        {
+          description: "List Pull Requests from someone",
+          title: "List",
+          value: "list-pr",
+        },
+        {
+          description: "Send Pull Request to someone",
+          title: "Send",
+          value: "send-pr",
+        },
+      ],
+      initial: 0,
+      message: "Which Command do you want to perform for Pull Request?",
+      name: "value",
+      type: "select",
+    });
 
     switch (response.value) {
       case "get-pr": {
-        const { pull_request_id } = await prompts(
-          {
-            message: "Insert the Pull Request ID",
-            name: "pull_request_id",
-            type: "number",
-          },
-          promptConfig
-        );
+        const { pull_request_id } = await prompts({
+          message: "Insert the Pull Request ID",
+          name: "pull_request_id",
+          type: "number",
+        });
 
         this.github.fetchPullRequest(pull_request_id);
 
@@ -137,45 +126,39 @@ class CommandLine {
         const data = await this.github.listPullRequest(true);
 
         if (data.length) {
-          const { confirm_select_pr } = await prompts(
-            {
-              initial: false,
-              message: "Do you want to select one of these PRs ?",
-              name: "confirm_select_pr",
-              type: "confirm",
-            },
-            promptConfig
-          );
+          const { confirm_select_pr } = await prompts({
+            initial: false,
+            message: "Do you want to select one of these PRs ?",
+            name: "confirm_select_pr",
+            type: "confirm",
+          });
 
           this.logShortcut("gt pr -u username");
 
           if (confirm_select_pr) {
-            const list_pr_answer = await prompts(
-              [
-                {
-                  choices: [
-                    ...data.map(({ number, title }) => ({
-                      title: `#${number}: ${title}`,
-                      value: number,
-                    })),
-                    {
-                      title: "I want to insert the Pull Request ID",
-                      value: "request-id",
-                    },
-                  ],
-                  initial: 0,
-                  message: "Do you want to get someone of these Pull Requests?",
-                  name: "pull_request_id_1",
-                  type: "select",
-                },
-                {
-                  message: "Pull Request ID",
-                  name: "pull_request_id_2",
-                  type: (prev) => (prev === "request-id" ? "number" : null),
-                },
-              ],
-              promptConfig
-            );
+            const list_pr_answer = await prompts([
+              {
+                choices: [
+                  ...data.map(({ number, title }) => ({
+                    title: `#${number}: ${title}`,
+                    value: number,
+                  })),
+                  {
+                    title: "I want to insert the Pull Request ID",
+                    value: "request-id",
+                  },
+                ],
+                initial: 0,
+                message: "Do you want to get someone of these Pull Requests?",
+                name: "pull_request_id_1",
+                type: "select",
+              },
+              {
+                message: "Pull Request ID",
+                name: "pull_request_id_2",
+                type: (prev) => (prev === "request-id" ? "number" : null),
+              },
+            ]);
 
             const pull_request_id = list_pr_answer.pull_request_id_2
               ? list_pr_answer.pull_request_id_2
@@ -191,7 +174,7 @@ class CommandLine {
       }
 
       case "send-pr": {
-        let [origins, defaultBranch] = await Promise.all([
+        const [origins, defaultBranch] = await Promise.all([
           this.git.getOrigins(),
           this.git.getDefaultBranch(),
         ]);
@@ -203,59 +186,69 @@ class CommandLine {
         const projectConfig = myConfig[repo];
 
         if (projectConfig) {
-          origins = projectConfig.remotes?.map((origin: string) => ({
-            alias: origin,
-            name: origin,
-          }));
+          const configOrigins = projectConfig.remotes?.map(
+            (origin: string | { alias: string; name: string }) => {
+              if (typeof origin === "string") {
+                return {
+                  alias: origin,
+                  name: origin,
+                };
+              } else {
+                return origin;
+              }
+            }
+          );
+
+          for (const origin of [...configOrigins, origins]) {
+            if (!origins.find(({ name }) => name === origin.name))
+              origins.concat(origin);
+          }
         }
 
         const last_commit = await this.git.getLastCommitMessage();
 
-        const response = await prompts(
-          [
-            {
-              choices: [
-                ...origins
-                  .sort((a, b) => a.name.localeCompare(b.name))
-                  .map((origin) => ({
-                    title: origin.name,
-                    value: origin.name,
-                  })),
-                {
-                  title: "Other",
-                  value: "other",
-                },
-              ],
-              message: "Do you want to send this PR to:",
-              name: "send_pr_to",
-              type: "autocomplete",
-            },
-            {
-              message: "Insert the Github Username",
-              name: "username",
-              type: (prev: string) => (prev === "other" ? "text" : null),
-            },
-            {
-              initial: defaultBranch,
-              message: "Which Branch do you want to send ?",
-              name: "reference_branch",
-              type: "text",
-            },
-            {
-              initial: repo,
-              message: "Which Repository do you want to send ?",
-              name: "reference_repository",
-              type: "text",
-            },
-            {
-              initial: last_commit,
-              message: "Insert the Pull Request Title",
-              name: "title",
-              type: "text",
-            },
-          ],
-          promptConfig
-        );
+        const response = await prompts([
+          {
+            choices: [
+              ...origins
+                .sort((a, b) => a.name.localeCompare(b.name))
+                .map((origin) => ({
+                  title: origin.name,
+                  value: origin.name,
+                })),
+              {
+                title: "Other",
+                value: "other",
+              },
+            ],
+            message: "Do you want to send this PR to:",
+            name: "send_pr_to",
+            type: "autocomplete",
+          },
+          {
+            message: "Insert the Github Username",
+            name: "username",
+            type: (prev: string) => (prev === "other" ? "text" : null),
+          },
+          {
+            initial: defaultBranch,
+            message: "Which Branch do you want to send ?",
+            name: "reference_branch",
+            type: "text",
+          },
+          {
+            initial: repo,
+            message: "Which Repository do you want to send ?",
+            name: "reference_repository",
+            type: "text",
+          },
+          {
+            initial: last_commit,
+            message: "Insert the Pull Request Title",
+            name: "title",
+            type: "text",
+          },
+        ]);
 
         const isOtherUser = response.send_pr_to === "other";
 
@@ -265,15 +258,12 @@ class CommandLine {
           await saveProjectConfig(repo, username, origins);
         }
 
-        const { confirm_send_pr } = await prompts(
-          {
-            initial: true,
-            message: "Do you want to send the Pull Request ?",
-            name: "confirm_send_pr",
-            type: "confirm",
-          },
-          promptConfig
-        );
+        const { confirm_send_pr } = await prompts({
+          initial: true,
+          message: "Do you want to send the Pull Request ?",
+          name: "confirm_send_pr",
+          type: "confirm",
+        });
 
         if (confirm_send_pr) {
           await this.github.createPullRequest({
@@ -321,75 +311,68 @@ class CommandLine {
     let action: string = mainCommand;
 
     if (withOnboardWorkflow) {
-      const response = await prompts(
-        {
-          choices: [
-            { title: "Configuration", value: "config" },
-            { title: "Fetch", value: "fetch" },
-            { title: "Issues", value: "issues" },
-            {
-              description: "This option has a description",
-              title: "Pull Request",
-              value: "pr",
-            },
-            { title: "Sync", value: "sync" },
-          ],
-          initial: 0,
-          message: "Which Action do you want to perform?",
-          name: "value",
-          type: "select",
-        },
-        promptConfig
-      );
+      const response = await prompts({
+        choices: [
+          { title: "Configuration", value: "config" },
+          {
+            description: "This option has a description",
+            title: "Pull Request",
+            value: "pr",
+          },
+          { title: "Sync", value: "sync" },
+          { disabled: true, title: "Fetch", value: "fetch" },
+          { disabled: true, title: "Issues", value: "issues" },
+        ],
+        initial: 0,
+        message: "Which Action do you want to perform?",
+        name: "value",
+        type: "select",
+      });
 
       action = response.value;
     }
 
-    try {
-      switch (action) {
-        case "pr": {
-          await this.execWorkflow(
-            withOnboardWorkflow,
-            this.workflowForPullRequestDry.bind(this),
-            this.workflowForPullRequestOnboard.bind(this)
-          );
-          break;
-        }
-
-        case "fetch": {
-          await this.execWorkflow(
-            withOnboardWorkflow,
-            this.workflowForFetchDry.bind(this),
-            this.workflowForFetchOnboard.bind(this)
-          );
-
-          break;
-        }
-
-        case "issues": {
-          console.log("Issues");
-
-          break;
-        }
-
-        case "config": {
-          await askConfiguration(this.applicationProperties.config.config);
-
-          break;
-        }
-
-        case "sync": {
-          console.log("Sync");
-          break;
-        }
-
-        default: {
-          console.log("Byee");
-          break;
-        }
+    switch (action) {
+      case "pr": {
+        await this.execWorkflow(
+          withOnboardWorkflow,
+          this.workflowForPullRequestDry.bind(this),
+          this.workflowForPullRequestOnboard.bind(this)
+        );
+        break;
       }
-    } catch (err) {
-      console.log("ERexx", err);
+
+      case "fetch": {
+        await this.execWorkflow(
+          withOnboardWorkflow,
+          this.workflowForFetchDry.bind(this),
+          this.workflowForFetchOnboard.bind(this)
+        );
+
+        break;
+      }
+
+      case "issues": {
+        console.log("Issues");
+
+        break;
+      }
+
+      case "config": {
+        await askConfiguration(this.applicationProperties.config.config);
+
+        break;
+      }
+
+      case "sync": {
+        console.log("Sync");
+        break;
+      }
+
+      default: {
+        console.log("Byee");
+        break;
+      }
     }
   }
 }
