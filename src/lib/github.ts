@@ -139,36 +139,6 @@ class Github {
     console.log(`Added comment: ${chalk.blue(payload.body)}`);
   }
 
-  async openPullRequest(
-    title: string,
-    actualBranch: string,
-    referenceBranch: string
-  ): Promise<void> {
-    const payload = {
-      base: referenceBranch,
-      head: `${this.me}:${actualBranch}`,
-      owner: this.owner,
-      repo: this.repo,
-      title,
-    };
-
-    try {
-      const {
-        data: { number },
-      } = await this.octokit.rest.pulls.create(payload);
-
-      console.log(
-        `Pull Request Sent To: ${chalk.green(`${this.owner}/${this.repo}`)}`
-      );
-
-      openBrowser(
-        `https://github.com/${this.owner}/${this.repo}/pull/${number}`
-      );
-    } catch (err) {
-      console.log("Error to Send PR", err.message);
-    }
-  }
-
   async createPullRequest(pullRequestConfig: PullRequestConfig): Promise<void> {
     const head = await Git.getActualBranch();
 
