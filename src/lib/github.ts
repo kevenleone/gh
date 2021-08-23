@@ -95,14 +95,11 @@ class Github {
       repo: this.repo,
     };
 
-    const spin = spinner(
+    console.log(
       `Fetching Pull Requests on ${chalk.green(
         `${payload.owner}/${payload.repo}`
       )}`
     );
-
-    spin.color = "green";
-    spin.start();
 
     try {
       const { data } = await this.octokit.rest.pulls.get(payload);
@@ -118,11 +115,8 @@ class Github {
       await this.createComment(data.number);
 
       await Git.checkout(newBranch);
-
-      spin.succeed();
     } catch (error) {
-      spin.text = error.message;
-      spin.warn();
+      console.log("Error to Pull Request", error.message);
     }
   }
 
@@ -167,7 +161,7 @@ class Github {
     };
 
     const spin = spinner(
-      `Creating Pull Request on ${chalk.green(
+      `Creating Pull Request to ${chalk.green(
         `${payload.owner}/${payload.repo}`
       )}`
     );
@@ -184,7 +178,7 @@ class Github {
 
       const delivered_to = `${pullRequestConfig.owner}/${pullRequestConfig.repo}`;
 
-      spin.text = `Pull Request Sent To: ${chalk.green(delivered_to)}`;
+      spin.text = `Pull Request Sent to: ${chalk.green(delivered_to)}`;
       spin.succeed();
 
       openBrowser(`https://github.com/${delivered_to}/pull/${number}`);
