@@ -95,21 +95,35 @@ class Github {
       repo: this.repo,
     };
 
-    console.log("Fetching Pull Request");
+    const spin = spinner(
+      `Fetching Pull Requests on ${chalk.green(
+        `${payload.owner}/${payload.repo}`
+      )}`
+    );
 
-    const { data } = await this.octokit.rest.pulls.get(payload);
+    spin.color = "green";
+    spin.start();
 
-    const newBranch = `${this.config.branch_prefix}${data.number}`;
-    const headBranch = data.head.ref;
-    const repoUrl = this.ssh
-      ? data?.head?.repo?.ssh_url
-      : data?.head?.repo?.clone_url;
+    try {
+      const { data } = await this.octokit.rest.pulls.get(payload);
 
-    await Git.fetch(repoUrl || "", headBranch, newBranch);
+      const newBranch = `${this.config.branch_prefix}${data.number}`;
+      const headBranch = data.head.ref;
+      const repoUrl = this.ssh
+        ? data?.head?.repo?.ssh_url
+        : data?.head?.repo?.clone_url;
 
-    await this.createComment(data.number);
+      await Git.fetch(repoUrl || "", headBranch, newBranch);
 
-    await Git.checkout(newBranch);
+      await this.createComment(data.number);
+
+      await Git.checkout(newBranch);
+
+      spin.succeed();
+    } catch (error) {
+      spin.text = error.message;
+      spin.warn();
+    }
   }
 
   async createComment(issue_number: number): Promise<void> {
@@ -182,6 +196,15 @@ class Github {
       title: pullRequestConfig.title,
     };
 
+    const spin = spinner(
+      `Creating Pull Request on ${chalk.green(
+        `${payload.owner}/${payload.repo}`
+      )}`
+    );
+
+    spin.color = "green";
+    spin.start();
+
     await Git.push(head);
 
     try {
@@ -191,11 +214,13 @@ class Github {
 
       const delivered_to = `${pullRequestConfig.owner}/${pullRequestConfig.repo}`;
 
-      console.log(`Pull Request Sent To: ${chalk.green(delivered_to)}`);
+      spin.text = `Pull Request Sent To: ${chalk.green(delivered_to)}`;
+      spin.succeed();
 
       openBrowser(`https://github.com/${delivered_to}/pull/${number}`);
     } catch (err) {
-      console.log("Error to Send PR", err.message);
+      spin.text = `Error to Send PR: ${chalk.green(err.message)}`;
+      spin.warn();
     }
   }
 }
