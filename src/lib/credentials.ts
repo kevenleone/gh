@@ -82,7 +82,7 @@ async function saveProjectConfig(
   }
 
   if (!config[project].remotes.includes(remote)) {
-    config[project].remotes.push(remote);
+    config[project].remotes.push({ alias: remote, name: remote });
   }
 
   await saveConfiguration(config);
