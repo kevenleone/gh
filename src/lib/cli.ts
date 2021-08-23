@@ -8,116 +8,11 @@ import { promptConfig } from "./utils";
 
 class CommandLine {
   private applicationProperties: ApplicationProperties;
-  private commandsList: any;
   private git: Git;
   public github: Github;
 
   constructor(applicationProperties: ApplicationProperties) {
     this.applicationProperties = applicationProperties;
-    this.commandsList = {
-      get_pull_request_id: {
-        initial: 0,
-        message: "Do you want to get someone of these Pull Requests?",
-        name: "pull_request_id_1",
-        type: "select",
-      },
-      insert_pull_request_id: {
-        message: "Insert the Pull Request ID",
-        name: "pull_request_id",
-        type: "number",
-      },
-      onboard: {
-        choices: [
-          { title: "Configuration", value: "config" },
-          { title: "Fetch", value: "fetch" },
-          { title: "Issues", value: "issues" },
-          {
-            description: "This option has a description",
-            title: "Pull Request",
-            value: "pr",
-          },
-          { title: "Sync", value: "sync" },
-        ],
-        initial: 0,
-        message: "Which Action do you want to perform?",
-        name: "value",
-        type: "select",
-      },
-      pull_request: {
-        list_pr: {
-          confirm_to_select_pr: {
-            initial: false,
-            message: "Do you want to select one of these PRs ?",
-            name: "confirm_select_pr",
-            type: "confirm",
-          },
-        },
-        send_pr: {
-          confirm: {
-            initial: true,
-            message: "Do you want to send the Pull Request ?",
-            name: "confirm_send_pr",
-            type: "confirm",
-          },
-          get_title: {
-            message: "Insert the Pull Request Title",
-            name: "title",
-            type: "text",
-          },
-          other_user: {
-            message: "Insert the Github Username",
-            name: "username",
-            type: (prev: string) => (prev === "other" ? "text" : null),
-          },
-          reference_branch: {
-            initial: "master",
-            message: "Which Branch do you want to send ?",
-            name: "reference_branch",
-            type: "text",
-          },
-          reference_repository: {
-            message: "Which Repository do you want to send ?",
-            name: "reference_repository",
-            type: "text",
-          },
-          to: {
-            choices: [
-              { title: "Cage" },
-              { title: "Clooney", value: "silver-fox" },
-              { title: "Gyllenhaal" },
-              { title: "Gibson" },
-              { title: "Grant" },
-            ],
-            message: "Do you want to send this PR to:",
-            name: "send_pr_to",
-            type: "autocomplete",
-          },
-        },
-      },
-      pull_request_options: {
-        choices: [
-          {
-            description: "Get one specific Pull Request from someone",
-            title: "Get",
-            value: "get-pr",
-          },
-          {
-            description: "List Pull Requests from someone",
-            title: "List",
-            value: "list-pr",
-          },
-          {
-            description: "Send Pull Request to someone",
-            title: "Send",
-            value: "send-pr",
-          },
-        ],
-        initial: 0,
-        message: "Which Command do you want to perform for Pull Request?",
-        name: "value",
-        type: "select",
-      },
-    };
     this.git = new Git();
     this.github = new Github(applicationProperties);
   }
@@ -139,7 +34,6 @@ class CommandLine {
 
     const { remoteName } = await prompts(
       {
-        ...this.commandsList.pull_request.send_pr.to,
         choices: [
           ...origins
             .sort((a, b) => a.alias.localeCompare(b.alias))
@@ -156,6 +50,7 @@ class CommandLine {
         ],
         message: "Do you want to fetch from",
         name: "remoteName",
+        type: "autocomplete",
       },
       promptConfig
     );
@@ -194,14 +89,40 @@ class CommandLine {
 
   private async workflowForPullRequestOnboard(): Promise<void> {
     const response = await prompts(
-      this.commandsList.pull_request_options,
+      {
+        choices: [
+          {
+            description: "Get one specific Pull Request from someone",
+            title: "Get",
+            value: "get-pr",
+          },
+          {
+            description: "List Pull Requests from someone",
+            title: "List",
+            value: "list-pr",
+          },
+          {
+            description: "Send Pull Request to someone",
+            title: "Send",
+            value: "send-pr",
+          },
+        ],
+        initial: 0,
+        message: "Which Command do you want to perform for Pull Request?",
+        name: "value",
+        type: "select",
+      },
       promptConfig
     );
 
     switch (response.value) {
       case "get-pr": {
         const { pull_request_id } = await prompts(
-          this.commandsList.insert_pull_request_id,
+          {
+            message: "Insert the Pull Request ID",
+            name: "pull_request_id",
+            type: "number",
+          },
           promptConfig
         );
 
@@ -217,7 +138,12 @@ class CommandLine {
 
         if (data.length) {
           const { confirm_select_pr } = await prompts(
-            this.commandsList.pull_request.list_pr.confirm_to_select_pr,
+            {
+              initial: false,
+              message: "Do you want to select one of these PRs ?",
+              name: "confirm_select_pr",
+              type: "confirm",
+            },
             promptConfig
           );
 
@@ -227,7 +153,6 @@ class CommandLine {
             const list_pr_answer = await prompts(
               [
                 {
-                  ...this.commandsList.get_pull_request_id,
                   choices: [
                     ...data.map(({ number, title }) => ({
                       title: `#${number}: ${title}`,
@@ -238,6 +163,10 @@ class CommandLine {
                       value: "request-id",
                     },
                   ],
+                  initial: 0,
+                  message: "Do you want to get someone of these Pull Requests?",
+                  name: "pull_request_id_1",
+                  type: "select",
                 },
                 {
                   message: "Pull Request ID",
@@ -285,7 +214,6 @@ class CommandLine {
         const response = await prompts(
           [
             {
-              ...this.commandsList.pull_request.send_pr.to,
               choices: [
                 ...origins
                   .sort((a, b) => a.name.localeCompare(b.name))
@@ -298,19 +226,32 @@ class CommandLine {
                   value: "other",
                 },
               ],
+              message: "Do you want to send this PR to:",
+              name: "send_pr_to",
+              type: "autocomplete",
             },
-            this.commandsList.pull_request.send_pr.other_user,
             {
-              ...this.commandsList.pull_request.send_pr.reference_branch,
+              message: "Insert the Github Username",
+              name: "username",
+              type: (prev: string) => (prev === "other" ? "text" : null),
+            },
+            {
               initial: defaultBranch,
+              message: "Which Branch do you want to send ?",
+              name: "reference_branch",
+              type: "text",
             },
             {
-              ...this.commandsList.pull_request.send_pr.reference_repository,
               initial: repo,
+              message: "Which Repository do you want to send ?",
+              name: "reference_repository",
+              type: "text",
             },
             {
-              ...this.commandsList.pull_request.send_pr.get_title,
               initial: last_commit,
+              message: "Insert the Pull Request Title",
+              name: "title",
+              type: "text",
             },
           ],
           promptConfig
@@ -325,7 +266,12 @@ class CommandLine {
         }
 
         const { confirm_send_pr } = await prompts(
-          this.commandsList.pull_request.send_pr.confirm,
+          {
+            initial: true,
+            message: "Do you want to send the Pull Request ?",
+            name: "confirm_send_pr",
+            type: "confirm",
+          },
           promptConfig
         );
 
@@ -339,7 +285,7 @@ class CommandLine {
 
           this.logShortcut(`gt pr -s ${username}`);
         } else {
-          console.log("No PR Confirmado");
+          console.log("PR not Sent");
         }
 
         break;
@@ -375,7 +321,26 @@ class CommandLine {
     let action: string = mainCommand;
 
     if (withOnboardWorkflow) {
-      const response = await prompts(this.commandsList.onboard, promptConfig);
+      const response = await prompts(
+        {
+          choices: [
+            { title: "Configuration", value: "config" },
+            { title: "Fetch", value: "fetch" },
+            { title: "Issues", value: "issues" },
+            {
+              description: "This option has a description",
+              title: "Pull Request",
+              value: "pr",
+            },
+            { title: "Sync", value: "sync" },
+          ],
+          initial: 0,
+          message: "Which Action do you want to perform?",
+          name: "value",
+          type: "select",
+        },
+        promptConfig
+      );
 
       action = response.value;
     }
