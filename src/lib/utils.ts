@@ -10,10 +10,6 @@ export const clearStdout = (data: ProcessOutput): string =>
 
 export const getTimeFromNow = (date: string): string => dayjs(date).fromNow();
 
-export const openBrowser = async (page?: string): Promise<void> => {
-  await $`open ${page}`;
-};
-
 export const promptConfig: prompt.Options = {
   onCancel: (): void => {
     console.log("No data will be saved");

@@ -1,7 +1,7 @@
 {
   "name": "gitray",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "./dist/index.js",
   "license": "MIT",
   "author": "Keven Leone <keven.leone@liferay.com>",
   "scripts": {
@@ -17,6 +17,7 @@
     "cli-table3": "^0.6.0",
     "dayjs": "^1.10.6",
     "figlet": "^1.5.0",
+    "open": "^8.2.1",
     "ora": "^5.4.1",
     "prompts": "^2.4.1",
     "zx": "^2.0.0"

@@ -1,10 +1,11 @@
 import { Octokit, RestEndpointMethodTypes } from "@octokit/rest";
 import Table from "cli-table3";
+import open from "open";
 import spinner from "ora";
 
 import { ApplicationProperties } from "../interfaces/types";
 import Git from "./git";
-import { getTimeFromNow, openBrowser } from "./utils";
+import { getTimeFromNow } from "./utils";
 
 interface PullRequestConfig {
   base?: string;
@@ -181,7 +182,7 @@ class Github {
       spin.text = `Pull Request Sent to: ${chalk.green(delivered_to)}`;
       spin.succeed();
 
-      openBrowser(`https://github.com/${delivered_to}/pull/${number}`);
+      await open(`https://github.com/${delivered_to}/pull/${number}`);
     } catch (err) {
       spin.text = `Error to Send PR: ${chalk.green(err.message)}`;
       spin.warn();
