@@ -133,7 +133,7 @@ class CommandLine {
       case "list-pr": {
         const data = await this.github.listPullRequest(true);
 
-        if (data.length) {
+        if (data && data.length) {
           const { confirm_select_pr } = await prompts({
             initial: false,
             message: "Do you want to select one of these PRs ?",

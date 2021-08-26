@@ -94,6 +94,7 @@ class Github {
       spin.text = error.message;
       spin.fail();
     }
+    return [];
   }
 
   async fetchPullRequest(
