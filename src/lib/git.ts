@@ -7,6 +7,17 @@ class Git {
     return remote_origin.stdout.replace(".git\n", "").split("/").slice(-2);
   }
 
+  public async getCommitsSinceHead(): Promise<string[]> {
+    const commits = await $`git cherry -v`;
+
+    console.log({ commits: commits.stdout.split("\n") });
+
+    return commits.stdout
+      .split("\n")
+      .map((remote) => remote.split("\t")[1])
+      .filter(Boolean);
+  }
+
   public async getBranchesFromRemote(remoteName: string): Promise<string[]> {
     const remoteBranches = await $`git ls-remote --heads ${remoteName}`;
 
@@ -62,7 +73,7 @@ class Git {
   }
 
   public async push(branch: string): Promise<void> {
-    await $`git push --set-upstream origin ${branch}`;
+    await $`git push --set-upstream origin ${branch} --force`;
   }
 
   public async checkout(branch: string): Promise<void> {

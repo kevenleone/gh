@@ -2,7 +2,7 @@ import { ApplicationProperties } from "../interfaces/types";
 import { askConfiguration, saveProjectConfig } from "./credentials";
 import { Git } from "./git";
 import { Github } from "./github";
-import { prompts } from "./utils";
+import { buildFlags, prompts } from "./utils";
 
 class CommandLine {
   private applicationProperties: ApplicationProperties;
@@ -64,19 +64,27 @@ class CommandLine {
 
   private async workflowForPullRequestDry(): Promise<void> {
     const {
-      title,
-      repo,
       base,
-      s: sendTo,
+      user: repo,
+      comment,
+      title,
+      sendTo,
       _: [, secondCommand],
-    } = this.applicationProperties.config.argv;
+    } = buildFlags(
+      this.applicationProperties.config.argv,
+      "base",
+      "comment",
+      "title",
+      "user",
+      "sendTo"
+    );
 
     if (secondCommand) {
-      return await this.github.fetchPullRequest(Number(secondCommand));
+      return this.github.fetchPullRequest(Number(secondCommand), comment);
     }
 
     if (sendTo) {
-      return await this.github.createPullRequest({ base, repo, title });
+      return this.github.createPullRequest({ base, repo, title });
     }
 
     await this.github.listPullRequest(true);
@@ -166,7 +174,7 @@ class CommandLine {
 
             this.github.fetchPullRequest(pull_request_id);
 
-            this.logShortcut(`gt pr -u ${pull_request_id} `);
+            this.logShortcut(`gt pr -u ${pull_request_id}`);
           }
         }
 

@@ -45,7 +45,9 @@ class Github {
 
   async listPullRequest(
     showTable: boolean
-  ): Promise<RestEndpointMethodTypes["pulls"]["list"]["response"]["data"]> {
+  ): Promise<
+    RestEndpointMethodTypes["pulls"]["list"]["response"]["data"] | undefined
+  > {
     const { owner, repo } = this;
 
     const spin = spinner(
@@ -55,41 +57,49 @@ class Github {
     spin.color = "green";
     spin.start();
 
-    const pulls = await this.octokit.rest.pulls.list({
-      owner,
-      repo,
-    });
+    try {
+      const pulls = await this.octokit.rest.pulls.list({
+        owner,
+        repo,
+      });
 
-    if (pulls.data.length) {
-      spin.succeed();
+      if (pulls.data.length) {
+        spin.succeed();
 
-      if (showTable) {
-        const table = new Table({
-          head: ["#", "Author", "Opened", "Status", "Title"],
-          style: { head: ["cyan"] },
-        });
+        if (showTable) {
+          const table = new Table({
+            head: ["#", "Author", "Opened", "Status", "Title"],
+            style: { head: ["cyan"] },
+          });
 
-        pulls.data.forEach(({ created_at, number, state, title, user }) => {
-          table.push([
-            `#${number}`,
-            `@${user?.login}`,
-            getTimeFromNow(created_at),
-            state.toUpperCase(),
-            title,
-          ]);
-        });
+          pulls.data.forEach(({ created_at, number, state, title, user }) => {
+            table.push([
+              `#${number}`,
+              `@${user?.login}`,
+              getTimeFromNow(created_at),
+              state.toUpperCase(),
+              title,
+            ]);
+          });
 
-        console.log(table.toString());
+          console.log(table.toString());
+        }
+
+        return pulls.data;
+      } else {
+        spin.text = "No Pull Request found";
+        spin.warn();
       }
-    } else {
-      spin.text = "No Pull Request found";
-      spin.warn();
+    } catch (error) {
+      spin.text = error.message;
+      spin.fail();
     }
-
-    return pulls.data;
   }
 
-  async fetchPullRequest(pull_number: number): Promise<void> {
+  async fetchPullRequest(
+    pull_number: number,
+    comment?: string | boolean | undefined
+  ): Promise<void> {
     const payload = {
       owner: this.owner || this.me,
       pull_number,
@@ -113,7 +123,9 @@ class Github {
 
       await Git.fetch(repoUrl || "", headBranch, newBranch);
 
-      await this.createComment(data.number);
+      if (typeof comment !== "boolean") {
+        await this.createComment(comment, data.number);
+      }
 
       await Git.checkout(newBranch);
     } catch (error) {
@@ -121,9 +133,13 @@ class Github {
     }
   }
 
-  async createComment(issue_number: number): Promise<void> {
+  async createComment(
+    comment: string | undefined,
+    issue_number: number
+  ): Promise<void> {
     const payload = {
-      body: this.config.review_signature || "Just starting reviewing :)",
+      body:
+        comment || this.config.review_signature || "Just starting reviewing :)",
       issue_number,
       owner: this.owner,
       repo: this.repo,
