@@ -7,14 +7,25 @@ class Git {
     return remote_origin.stdout.replace(".git\n", "").split("/").slice(-2);
   }
 
-  public async getCommitsSinceHead(): Promise<string[]> {
-    const commits = await $`git cherry -v`;
+  private async getLastBranchName(): Promise<string> {
+    const branch = await $`git name-rev $(git rev-parse @{-1}) --name-only`;
 
-    console.log({ commits: commits.stdout.split("\n") });
+    return clearStdout(branch);
+  }
+
+  public async verifyBranchExistLocal(branch: string): Promise<boolean> {
+    const branchExist = await nothrow($`git rev-parse --verify ${branch}`);
+
+    return !!branchExist.stdout;
+  }
+
+  public async getCommitsSinceHead(): Promise<string[]> {
+    const branch = await this.getLastBranchName();
+    const commits = await $`git cherry -v ${branch}`;
 
     return commits.stdout
       .split("\n")
-      .map((remote) => remote.split("\t")[1])
+      .map((remote) => remote.split(" ").splice(2).join(" "))
       .filter(Boolean);
   }
 
