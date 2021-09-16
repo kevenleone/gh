@@ -1,6 +1,6 @@
 {
   "name": "gitray",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "main": "./dist/index.js",
   "license": "MIT",
   "author": "Keven Leone <keven.leone@liferay.com>",
@@ -13,14 +13,14 @@
     "watch": "tsc -w"
   },
   "dependencies": {
-    "@octokit/rest": "^18.7.0",
+    "@octokit/rest": "^18.10.0",
     "cli-table3": "^0.6.0",
-    "dayjs": "^1.10.6",
-    "figlet": "^1.5.0",
+    "dayjs": "^1.10.7",
+    "figlet": "^1.5.2",
     "open": "^8.2.1",
     "ora": "^5.4.1",
     "prompts": "^2.4.1",
-    "zx": "^2.0.0"
+    "zx": "^4.2.0"
   },
   "engines": {
     "node": ">= 14"
