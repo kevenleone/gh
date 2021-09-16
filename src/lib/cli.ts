@@ -394,7 +394,7 @@ class CommandLine {
       }
 
       case "sync": {
-        console.log("Sync");
+        await this.git.sync();
         break;
       }
 

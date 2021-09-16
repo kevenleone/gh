@@ -98,6 +98,37 @@ class Git {
   ): Promise<void> {
     await $`git fetch ${repoUrl} ${headBranch}:${pullBranch} --no-tags`;
   }
+
+  /**
+   * @description Function used to Fetch data from Upstream
+   * And send it back to origin on default branch
+   */
+
+  public async sync(): Promise<void> {
+    const [actualBranch, defaultBranch] = await Promise.all([
+      this.getActualBranch(),
+      this.getDefaultBranch(),
+    ]);
+
+    if (actualBranch !== defaultBranch) {
+      return console.warn(
+        `${chalk.yellow(`You cannot Sync out of ${defaultBranch}`)}`
+      );
+    }
+
+    /**
+     * This verbose is important at this point, to let users know
+     * which files have been downloaded.
+     */
+
+    $.verbose = true;
+
+    console.log("Sync in Progress");
+
+    await $`git pull --rebase upstream ${actualBranch} && git push -f origin ${actualBranch}`;
+
+    console.log(`${chalk.green("Sync Completed")}`);
+  }
 }
 
 export { Git };
