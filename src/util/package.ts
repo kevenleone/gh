@@ -1,7 +1,7 @@
 import path from "path";
 
 type Package = {
-  version: string;
+  version: string | null;
   name: string;
 };
 
@@ -18,7 +18,7 @@ try {
 } catch (error) {
   pkg = {
     name: "gitray",
-    version: "undefined",
+    version: null,
   };
 }
 
