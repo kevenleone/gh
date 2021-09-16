@@ -1,4 +1,5 @@
 #!/usr/bin/env zx
+import "zx/globals";
 
 import figlet from "figlet";
 import minimist from "minimist";
@@ -7,6 +8,7 @@ import CommandLine from "./lib/cli";
 import { getConfig } from "./lib/credentials";
 import Git from "./lib/git";
 import { getGithubClient } from "./lib/github";
+import pkg from "./util/package";
 
 const argv = minimist(process.argv.slice(3));
 
@@ -23,10 +25,13 @@ class Application {
 
   private welcome(): void {
     console.log(
-      figlet.textSync("GitRay", {
+      figlet.textSync(`GitRay`, {
         font: "Big",
       })
     );
+    if (pkg.version) {
+      console.log(`CLI Version: ${pkg.version}`);
+    }
   }
 
   /**
