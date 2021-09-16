@@ -1,3 +1,5 @@
+import spinner from "ora";
+
 import { ApplicationProperties } from "../interfaces/types";
 import { askConfiguration, saveProjectConfig } from "./credentials";
 import { Git } from "./git";
@@ -52,14 +54,33 @@ class CommandLine {
 
     const branches = await this.git.getBranchesFromRemote(remoteName);
 
-    await prompts({
+    const { branch } = await prompts({
       choices: branches.map((branch) => ({
         title: branch.replace("refs/heads/", ""),
       })),
       message: `Pick the Branch from ${remoteName}:`,
-      name: "send_pr_to",
+      name: "branch",
       type: "autocomplete",
     });
+
+    const newBranch = `${branch}-new`;
+
+    const spin = spinner(`Fetching Branch ${branch} from ${remoteName}`);
+
+    spin.start();
+
+    const branchExist = await this.git.verifyBranchExistLocal(newBranch);
+
+    if (branchExist) {
+    } else {
+      await this.git.fetch(remoteName, branch, newBranch);
+
+      spin.text = `Checkout into branch ${newBranch}`;
+
+      await this.git.checkout(newBranch);
+    }
+
+    spin.succeed();
   }
 
   private async workflowForPullRequestDry(): Promise<void> {
@@ -328,7 +349,7 @@ class CommandLine {
             value: "pr",
           },
           { title: "Sync", value: "sync" },
-          { disabled: true, title: "Fetch", value: "fetch" },
+          { disabled: false, title: "Fetch", value: "fetch" },
           { disabled: true, title: "Issues", value: "issues" },
         ],
         initial: 0,
