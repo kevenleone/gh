@@ -18,11 +18,44 @@ class CommandLine {
   }
 
   private logShortcut(command: string): void {
+    const alias = "gitray";
     console.info(
       `To repeat this command, easily, use this shorthand: ${chalk.cyan(
-        command
+        `${alias} ${command}`
       )}`
     );
+  }
+
+  private async selectPRFromList(data: any[]) {
+    const list_pr_answer = await prompts([
+      {
+        choices: [
+          ...data.map(({ number, title }) => ({
+            title: `#${number}: ${title}`,
+            value: number,
+          })),
+          {
+            title: "I want to insert Pull Request ID",
+            value: "request-id",
+          },
+        ],
+        initial: 0,
+        message: "Do you want to get someone of these Pull Requests?",
+        name: "pull_request_id_1",
+        type: "select",
+      },
+      {
+        message: "Pull Request ID",
+        name: "pull_request_id_2",
+        type: (prev) => (prev === "request-id" ? "number" : null),
+      },
+    ]);
+
+    const pull_request_id = list_pr_answer.pull_request_id_2
+      ? list_pr_answer.pull_request_id_2
+      : list_pr_answer.pull_request_id_1;
+
+    return pull_request_id;
   }
 
   private async workflowForFetchDry(): Promise<void> {
@@ -63,7 +96,7 @@ class CommandLine {
       type: "autocomplete",
     });
 
-    const newBranch = `${branch}-new`;
+    const newBranch = `${branch}-${new Date().getTime()}`;
 
     const spin = spinner(`Fetching Branch ${branch} from ${remoteName}`);
 
@@ -86,34 +119,58 @@ class CommandLine {
   private async workflowForPullRequestDry(): Promise<void> {
     const {
       base,
-      user: repo,
+      user,
       comment,
       title,
       sendTo,
-      _: [, secondCommand],
+      _: [, mainCommand, secondaryCommand, thirdCommand],
     } = buildFlags(
       this.applicationProperties.config.argv,
       "base",
       "comment",
       "title",
       "user",
+      "forward",
       "sendTo"
     );
 
-    if (secondCommand) {
-      return this.github.fetchPullRequest(Number(secondCommand), comment);
+    if (mainCommand === "forward") {
+      if (!secondaryCommand || !thirdCommand) {
+        console.error(
+          `Example of Forward: ${chalk.cyan(
+            "gh pr -u liferay pt-liferay-solutions 123"
+          )}`
+        );
+        return console.error(`Exiting: ${chalk.red("Commands Missing")}`);
+      }
+
+      await this.github.forwardPullRequest(
+        parseInt(thirdCommand, 10), // Pull Request ID
+        user, // Owner
+        secondaryCommand // Forward To
+      );
+
+      return;
     }
 
-    if (sendTo) {
-      return this.github.createPullRequest({ base, repo, title });
+    if (mainCommand) {
+      await this.github.fetchPullRequest(Number(mainCommand), comment);
+    } else if (sendTo) {
+      await this.github.createPullRequest({ base, repo: user, title });
+    } else {
+      await this.github.listPullRequest(true);
     }
-
-    await this.github.listPullRequest(true);
   }
 
   private async workflowForPullRequestOnboard(): Promise<void> {
     const response = await prompts({
       choices: [
+        {
+          description:
+            "Forward one specific Pull Request from someone to other user",
+          title: "Forward",
+          value: "forward-pr",
+        },
         {
           description: "Get one specific Pull Request from someone",
           title: "Get",
@@ -146,13 +203,21 @@ class CommandLine {
 
         this.github.fetchPullRequest(pull_request_id);
 
-        this.logShortcut("gt pr -u username 111");
+        this.logShortcut("pr -u username 111");
 
         break;
       }
 
-      case "list-pr": {
-        const data = await this.github.listPullRequest(true);
+      case "forward-pr": {
+        const { forward_pr_from } = await prompts({
+          message: "Do you want to forward PR from which github user ?",
+          name: "forward_pr_from",
+          type: "text",
+        });
+
+        const data = await this.github.listPullRequest(true, {
+          owner: forward_pr_from,
+        });
 
         if (data && data.length) {
           const { confirm_select_pr } = await prompts({
@@ -162,40 +227,73 @@ class CommandLine {
             type: "confirm",
           });
 
-          this.logShortcut("gt pr -u username");
+          if (confirm_select_pr) {
+            const pull_request_id = await this.selectPRFromList(data);
+
+            const { forward_pr_to } = await prompts({
+              message: "Do you want to forward PR to who?",
+              name: "forward_pr_to",
+              type: "text",
+            });
+
+            await this.github.forwardPullRequest(
+              pull_request_id,
+              forward_pr_from,
+              forward_pr_to
+            );
+
+            this.logShortcut(
+              `pr forward -u ${forward_pr_from} ${forward_pr_to} ${pull_request_id}`
+            );
+          }
+        }
+
+        break;
+      }
+
+      case "list-pr": {
+        const { confirm_list_my_prs } = await prompts({
+          initial: true,
+          message: "I Want to List my Pull Request or from someone else ?",
+          name: "confirm_list_my_prs",
+          type: "confirm",
+        });
+
+        let list_pr_from = this.applicationProperties.config.owner;
+
+        if (!confirm_list_my_prs) {
+          ({ list_pr_from } = await prompts({
+            message:
+              "Do you want to list Pull Request from which github user ?",
+            name: "list_pr_from",
+            type: "text",
+          }));
+        }
+
+        const data = await this.github.listPullRequest(true, {
+          owner: list_pr_from,
+        });
+
+        if (data) {
+          const { confirm_select_pr } = await prompts({
+            initial: true,
+            message: data.length
+              ? "Do you want to select one of these PRs ?"
+              : "No Pull Request open was found, but you can type Pull Request ID",
+            name: "confirm_select_pr",
+            type: "confirm",
+          });
+
+          this.logShortcut(`pr -u ${list_pr_from}`);
 
           if (confirm_select_pr) {
-            const list_pr_answer = await prompts([
-              {
-                choices: [
-                  ...data.map(({ number, title }) => ({
-                    title: `#${number}: ${title}`,
-                    value: number,
-                  })),
-                  {
-                    title: "I want to insert the Pull Request ID",
-                    value: "request-id",
-                  },
-                ],
-                initial: 0,
-                message: "Do you want to get someone of these Pull Requests?",
-                name: "pull_request_id_1",
-                type: "select",
-              },
-              {
-                message: "Pull Request ID",
-                name: "pull_request_id_2",
-                type: (prev) => (prev === "request-id" ? "number" : null),
-              },
-            ]);
+            const pull_request_id = await this.selectPRFromList(data);
 
-            const pull_request_id = list_pr_answer.pull_request_id_2
-              ? list_pr_answer.pull_request_id_2
-              : list_pr_answer.pull_request_id_1;
+            await this.github.fetchPullRequest(pull_request_id, undefined, {
+              owner: list_pr_from,
+            });
 
-            this.github.fetchPullRequest(pull_request_id);
-
-            this.logShortcut(`gt pr -u ${pull_request_id}`);
+            this.logShortcut(`pr -u ${list_pr_from} ${pull_request_id}`);
           }
         }
 

@@ -7,9 +7,10 @@ import { ApplicationProperties } from "../interfaces/types";
 import Git from "./git";
 import { getTimeFromNow } from "./utils";
 
-interface PullRequestConfig {
+interface Options {
   base?: string;
   owner?: string;
+  prefix?: string;
   repo?: string;
   title?: string;
 }
@@ -24,11 +25,11 @@ async function getGithubClient(auth: string): Promise<Octokit> {
 
 class Github {
   private readonly octokit: Octokit;
-  private config;
-  private ssh: boolean;
-  private me: string;
-  private owner: string;
-  private repo: string;
+  private readonly config;
+  private readonly ssh: boolean;
+  private readonly me: string;
+  private readonly owner: string;
+  private readonly repo: string;
 
   constructor(applicationProperties: ApplicationProperties) {
     const {
@@ -38,20 +39,39 @@ class Github {
     this.config = config;
     this.octokit = octokit;
     this.ssh = false;
-    this.me = config.username;
+    this.me = config.username || "";
     this.owner = fromUser || owner || this.me;
-    this.repo = repo;
+    this.repo = repo || "";
+  }
+
+  protected getReferenceOptions(options: Options = {}): Options {
+    if (!options.repo) {
+      options.repo = this.repo;
+    }
+
+    if (!options.owner) {
+      options.owner = this.owner;
+    }
+
+    if (!options.prefix) {
+      options.prefix = this.config.branch_prefix;
+    }
+
+    return options;
   }
 
   async listPullRequest(
-    showTable: boolean
+    showTable: boolean,
+    options?: Options
   ): Promise<
     RestEndpointMethodTypes["pulls"]["list"]["response"]["data"] | undefined
   > {
-    const { owner, repo } = this;
+    const _options = this.getReferenceOptions(options);
 
     const spin = spinner(
-      `Listing open pull requests on ${chalk.green(`${owner}/${repo}`)}`
+      `Listing open pull requests on ${chalk.green(
+        `${_options.owner}/${_options.repo}`
+      )}`
     );
 
     spin.color = "green";
@@ -59,8 +79,8 @@ class Github {
 
     try {
       const pulls = await this.octokit.rest.pulls.list({
-        owner,
-        repo,
+        owner: _options.owner as string,
+        repo: _options.repo as string,
       });
 
       if (pulls.data.length) {
@@ -91,7 +111,9 @@ class Github {
         spin.warn();
       }
     } catch (error) {
-      spin.text = error.message;
+      spin.text = `Error: ${error.message} - ${chalk.green(
+        `${_options.owner}/${_options.repo}`
+      )}`;
       spin.fail();
     }
     return [];
@@ -99,12 +121,15 @@ class Github {
 
   async fetchPullRequest(
     pull_number: number,
-    comment?: string | boolean | undefined
-  ): Promise<void> {
+    comment?: string | boolean | undefined,
+    options?: Options
+  ): Promise<boolean> {
+    const _options = this.getReferenceOptions(options);
+
     const payload = {
-      owner: this.owner || this.me,
+      owner: _options.owner as string,
       pull_number,
-      repo: this.repo,
+      repo: _options.repo as string,
     };
 
     console.log(
@@ -116,7 +141,7 @@ class Github {
     try {
       const { data } = await this.octokit.rest.pulls.get(payload);
 
-      const newBranch = `${this.config.branch_prefix}${data.number}`;
+      const newBranch = `${_options.prefix}${data.number}`;
       const headBranch = data.head.ref;
       const repoUrl = this.ssh
         ? data?.head?.repo?.ssh_url
@@ -129,21 +154,53 @@ class Github {
       }
 
       await Git.checkout(newBranch);
+
+      return true;
     } catch (error) {
       console.log("Error to Pull Request", error.message);
+
+      return false;
+    }
+  }
+
+  async forwardPullRequest(
+    pull_number: number,
+    owner: string,
+    forwardTo: string
+  ): Promise<void> {
+    console.log("Starting Forward Pull Request");
+
+    const fetchWorked = await this.fetchPullRequest(pull_number, false, {
+      owner,
+      prefix: `rand-${new Date().getTime()}`,
+    });
+
+    if (fetchWorked) {
+      const forwarded_pr = await this.createPullRequest({
+        owner: forwardTo,
+      });
+
+      await this.createComment(
+        `Pull Request forwarded: ${forwarded_pr?.html_url}`,
+        pull_number,
+        { owner }
+      );
     }
   }
 
   async createComment(
     comment: string | undefined,
-    issue_number: number
+    issue_number: number,
+    options?: Options
   ): Promise<void> {
+    const _options = this.getReferenceOptions(options);
+
     const payload = {
       body:
         comment || this.config.review_signature || "Just starting reviewing :)",
       issue_number,
-      owner: this.owner,
-      repo: this.repo,
+      owner: _options.owner as string,
+      repo: _options.repo as string,
     };
 
     await this.octokit.issues.createComment(payload);
@@ -151,31 +208,29 @@ class Github {
     console.log(`Added comment: ${chalk.blue(payload.body)}`);
   }
 
-  async createPullRequest(pullRequestConfig: PullRequestConfig): Promise<void> {
+  async createPullRequest(
+    options: Options
+  ): Promise<
+    RestEndpointMethodTypes["pulls"]["create"]["response"]["data"] | undefined
+  > {
     const head = await Git.getActualBranch();
 
-    if (!pullRequestConfig.title) {
-      pullRequestConfig.title = await Git.getLastCommitMessage();
+    const _options = this.getReferenceOptions(options);
+
+    if (!_options.title) {
+      _options.title = await Git.getLastCommitMessage();
     }
 
-    if (!pullRequestConfig.repo) {
-      pullRequestConfig.repo = this.repo;
-    }
-
-    if (!pullRequestConfig.owner) {
-      pullRequestConfig.owner = this.owner;
-    }
-
-    if (!pullRequestConfig.base) {
-      pullRequestConfig.base = await Git.getDefaultBranch();
+    if (!_options.base) {
+      _options.base = await Git.getDefaultBranch();
     }
 
     const payload = {
-      base: pullRequestConfig.base,
+      base: _options.base,
       head: `${this.me}:${head}`,
-      owner: pullRequestConfig.owner,
-      repo: pullRequestConfig.repo,
-      title: pullRequestConfig.title,
+      owner: _options.owner as string,
+      repo: _options.repo as string,
+      title: _options.title,
     };
 
     const spin = spinner(
@@ -190,19 +245,21 @@ class Github {
     await Git.push(head);
 
     try {
-      const {
-        data: { number },
-      } = await this.octokit.rest.pulls.create(payload);
+      const { data } = await this.octokit.rest.pulls.create(payload);
 
-      const delivered_to = `${pullRequestConfig.owner}/${pullRequestConfig.repo}`;
+      const delivered_to = `${_options.owner}/${_options.repo}`;
 
       spin.text = `Pull Request Sent to: ${chalk.green(delivered_to)}`;
       spin.succeed();
 
-      await open(`https://github.com/${delivered_to}/pull/${number}`);
+      await open(`https://github.com/${delivered_to}/pull/${data.number}`);
+
+      return data;
     } catch (err) {
       spin.text = `Error to Send PR: ${chalk.green(err.message)}`;
       spin.warn();
+
+      return undefined;
     }
   }
 }

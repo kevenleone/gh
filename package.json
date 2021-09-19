@@ -1,6 +1,6 @@
 {
   "name": "gitray",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "main": "./dist/index.js",
   "license": "MIT",
   "author": "Keven Leone <keven.leone@liferay.com>",

@@ -15,3 +15,11 @@
 ## 1.3.0
 
 *  Add binary file to package.json to avoid create mannual symlinks, now user just need to run yarn link to create `gitray` globally
+
+## 1.4.0
+
+* New feature: Forward Pull Request
+    * Now users can forward PR from **userA** to **userB**, using shortcut or guided mode.
+    Everything you need to do is:
+        * Using shortcut `gitray pr forward -u userA userB 10`
+        * Using guided `gitray > Pull Request > Forward` and answer the questions

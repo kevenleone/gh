@@ -10,7 +10,9 @@ import Git from "./lib/git";
 import { getGithubClient } from "./lib/github";
 import pkg from "./util/package";
 
-const argv = minimist(process.argv.slice(3));
+const argv = minimist(
+  process.argv.slice(process.env.GLOBAL_INITIALIZER ? 2 : 3)
+);
 
 /**
  * @description If you want to see what happens under the hoods, use the flag --verbose
