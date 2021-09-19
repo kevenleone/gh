@@ -28,18 +28,14 @@ Git >= `1.7.0`
 ```bash
 npm i -g yarn # Skip if you already use it
 npm i -g zx
-yarn add-alias
+yarn link
 ```
 
-When running `yarn add-alias` you need to configure which Bash are you using and then put your alias to call this project, I suggest using `gh` or any other of your preference.
-
-Note: **Be careful to not asign an alias already in use in your computer**, such as *cd*, *git*, *mv*, *ga* etc. 
-
-Before configure this part, verify if the alias you want aren't in use.
+After run `yarn link` an alias you'll be added into you aliases type `gitray` into any git project to see if it's working.
 
 ## :gear: Configuration
 
-After everything setup, open a terminal of your preference and type with the alias used in `add-alias` step, like this;
+After everything setup, open a terminal of your preference and type `gitray` step, like this;
 
 ![First access configuration](./images/config.png)
 

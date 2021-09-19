@@ -11,3 +11,7 @@
 ## 1.2.0
 
 * Add new feature to sync commits from origin to upstream
+
+## 1.3.0
+
+*  Add binary file to package.json to avoid create mannual symlinks, now user just need to run yarn link to create `gitray` globally
