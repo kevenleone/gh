@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.5.0
+
+* Get version directly from package.json using binary file
+
 ## 1.4.0
 
 * New feature: Forward Pull Request

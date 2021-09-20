@@ -8,7 +8,6 @@ import CommandLine from "./lib/cli";
 import { getConfig } from "./lib/credentials";
 import Git from "./lib/git";
 import { getGithubClient } from "./lib/github";
-import pkg from "./util/package";
 
 const argv = minimist(
   process.argv.slice(process.env.GLOBAL_INITIALIZER ? 2 : 3)
@@ -26,13 +25,15 @@ class Application {
    */
 
   private welcome(): void {
+    const version = process.env.PACKAGE_VERSION;
+
     console.log(
       figlet.textSync(`GitRay`, {
         font: "Big",
       })
     );
-    if (pkg.version) {
-      console.log(`CLI Version: ${pkg.version}`);
+    if (version) {
+      console.log(`CLI Version: ${version}`);
     }
   }
 
