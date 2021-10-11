@@ -28,6 +28,7 @@ Git >= `1.7.0`
 ```bash
 npm i -g yarn # Skip if you already use it
 npm i -g zx
+yarn
 yarn link
 ```
 
