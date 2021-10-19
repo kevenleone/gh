@@ -203,7 +203,12 @@ class CommandLine {
 
         this.github.fetchPullRequest(pull_request_id);
 
-        this.logShortcut("pr -u username 111");
+        this.logShortcut(
+          `pr -u ${
+            this.applicationProperties.config.fromUser ||
+            this.applicationProperties.config.owner
+          } ${pull_request_id}`
+        );
 
         break;
       }
@@ -400,7 +405,7 @@ class CommandLine {
             title: response.title,
           });
 
-          this.logShortcut(`gt pr -s ${username}`);
+          this.logShortcut(`pr -s ${username}`);
         } else {
           console.log("PR not Sent");
         }

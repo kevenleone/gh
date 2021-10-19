@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.6.0
+
+* Fix logShortcut from Get Pull Request by ID, to use correct alias 
+
 ## 1.5.0
 
 * Get version directly from package.json using binary file
