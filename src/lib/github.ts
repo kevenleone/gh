@@ -33,14 +33,14 @@ class Github {
 
   constructor(applicationProperties: ApplicationProperties) {
     const {
-      config: { config, fromUser, owner, repo },
+      config: { config, owner, repo },
       octokit,
     } = applicationProperties;
     this.config = config;
     this.octokit = octokit;
     this.ssh = false;
     this.me = config.username || "";
-    this.owner = fromUser || owner || this.me;
+    this.owner = owner || this.me;
     this.repo = repo || "";
   }
 

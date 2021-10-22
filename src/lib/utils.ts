@@ -1,20 +1,9 @@
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
-import { ParsedArgs } from "minimist";
 import prompt from "prompts";
 import { ProcessOutput } from "zx";
 
 dayjs.extend(relativeTime);
-
-export const buildFlags = (argv: ParsedArgs, ...args: string[]): ParsedArgs => {
-  const flags: any = {};
-
-  for (const arg of args) {
-    flags[arg] = argv[arg] ?? argv[arg.charAt(0)];
-  }
-
-  return { ...argv, ...flags };
-};
 
 export const clearStdout = (data: ProcessOutput): string =>
   data.stdout.replace("\n", "").trim();

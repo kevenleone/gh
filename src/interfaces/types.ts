@@ -1,9 +1,8 @@
 import { Octokit } from "@octokit/rest";
-import { ParsedArgs } from "minimist";
 
 interface ApplicationProperties {
-  octokit: Octokit;
   config: GithubOptions;
+  octokit: Octokit;
 }
 
 interface Configuration {
@@ -14,9 +13,7 @@ interface Configuration {
 }
 
 interface GithubOptions {
-  argv: ParsedArgs;
   config: Configuration;
-  fromUser: string;
   owner: string;
   repo: string;
 }
