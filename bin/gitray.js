@@ -4,8 +4,9 @@
 const pkg = require("../package.json");
 
 /**
- * Just a workaround to load correct argv number
+ * Inject data in Process Envinroment
  */
+process.env.APP_NAME = "GitRay";
 process.env.GLOBAL_INITIALIZER = true;
 process.env.PACKAGE_VERSION = pkg.version;
 
