@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.0.0
+
+* Use Commander to handle CLI entries, with CLI Help, Version and detailed options to be used
+* Removed Detailed mode by Default, now you should use `gitray cli` to open guided mode
+* Add Options and Helps for each used Command
+
 ## 1.6.0
 
 * Fix logShortcut from Get Pull Request by ID, to use correct alias 
