@@ -1,38 +1,47 @@
 #!/usr/bin/env zx
 import "zx/globals";
 
+import { Command } from "commander";
 import figlet from "figlet";
-import minimist from "minimist";
 
-import CommandLine from "./lib/cli";
+import CLI from "./lib/cli";
 import { getConfig } from "./lib/credentials";
 import Git from "./lib/git";
 import { getGithubClient } from "./lib/github";
 
-const argv = minimist(
-  process.argv.slice(process.env.GLOBAL_INITIALIZER ? 2 : 3)
-);
+const APP_NAME = process.env.APP_NAME || "GitRay";
 
 /**
  * @description If you want to see what happens under the hoods, use the flag --verbose
  */
 
-$.verbose = !!argv.verbose;
+$.verbose = process.argv.includes("--verbose");
 
 class Application {
+  public cli: Command;
+
+  constructor() {
+    this.cli = new Command(APP_NAME);
+
+    this.welcome();
+  }
+
   /**
-   * @description Just a ASCII Art
+   * @description Just an ASCII Art
    */
 
   private welcome(): void {
     const version = process.env.PACKAGE_VERSION;
 
     console.log(
-      figlet.textSync(`GitRay`, {
+      figlet.textSync(APP_NAME as string, {
         font: "Big",
       })
     );
+
     if (version) {
+      this.cli.version(version, "-v", `Display ${APP_NAME} Version`);
+
       console.log(`CLI Version: ${version}`);
     }
   }
@@ -42,35 +51,29 @@ class Application {
    * Also, the SETUP and configurations are made here and used in all application
    */
 
-  public async run(): Promise<void> {
-    this.welcome();
-
+  public async init(): Promise<void> {
     const config = await getConfig();
 
-    const [octokit, origin] = await Promise.all([
+    const [octokit, [owner, repo]] = await Promise.all([
       getGithubClient(config.token),
       Git.getOriginRemote(),
     ]);
 
-    const { s: sendTo, u: fromUser } = argv;
-
     const applicationProperties = {
       config: {
-        argv,
         config,
-        fromUser: fromUser || sendTo,
-        owner: origin[0],
-        repo: origin[1],
+        owner,
+        repo,
       },
       octokit,
     };
 
-    const cli = new CommandLine(applicationProperties);
+    const cli = new CLI(this.cli, applicationProperties);
 
-    await cli.showCommands();
+    await cli.createCLI();
   }
 }
 
 const application = new Application();
 
-application.run();
+application.init();

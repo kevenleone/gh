@@ -1,6 +1,6 @@
 {
   "name": "gitray",
-  "version": "1.6.0",
+  "version": "2.0.0",
   "main": "./dist/index.js",
   "license": "MIT",
   "author": "Keven Leone <keven.leone@liferay.com>",
@@ -17,6 +17,7 @@
   "dependencies": {
     "@octokit/rest": "^18.10.0",
     "cli-table3": "^0.6.0",
+    "commander": "^8.2.0",
     "dayjs": "^1.10.7",
     "figlet": "^1.5.2",
     "open": "^8.2.1",
