@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.1.0
+
+* Add options to get Pull Request with no comments.
+
 ## 2.0.0
 
 * Use Commander to handle CLI entries, with CLI Help, Version and detailed options to be used
