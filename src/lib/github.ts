@@ -150,7 +150,9 @@ class Github {
       await Git.fetch(repoUrl || "", headBranch, newBranch);
 
       if (typeof comment !== "boolean") {
-        await this.createComment(comment, data.number);
+        await this.createComment(comment, data.number, {
+          owner: payload.owner,
+        });
       }
 
       await Git.checkout(newBranch);
@@ -202,6 +204,8 @@ class Github {
       owner: _options.owner as string,
       repo: _options.repo as string,
     };
+
+    console.log({ payload1: payload });
 
     await this.octokit.issues.createComment(payload);
 

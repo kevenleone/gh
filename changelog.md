@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.2.0
+
+* Fix bug to Fetch Pull Request from a specific User
+
 ## 2.1.0
 
 * Add options to get Pull Request with no comments.
