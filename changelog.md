@@ -2,6 +2,10 @@
 
 ## 2.2.0
 
+* Unnecessary `console.log` was removed
+
+## 2.2.0
+
 * Fix bug to Fetch Pull Request from a specific User
 
 ## 2.1.0

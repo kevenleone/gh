@@ -205,8 +205,6 @@ class Github {
       repo: _options.repo as string,
     };
 
-    console.log({ payload1: payload });
-
     await this.octokit.issues.createComment(payload);
 
     console.log(`Added comment: ${chalk.blue(payload.body)}`);
