@@ -44,7 +44,7 @@ class Github {
     this.repo = repo || "";
   }
 
-  protected getReferenceOptions(options: Options = {}): Options {
+  private getReferenceOptions(options: Options = {}): Options {
     if (!options.repo) {
       options.repo = this.repo;
     }
@@ -193,7 +193,8 @@ class Github {
   async createComment(
     comment: string | undefined,
     issue_number: number,
-    options?: Options
+    options?: Options,
+    with_log = true
   ): Promise<void> {
     const _options = this.getReferenceOptions(options);
 
@@ -207,7 +208,9 @@ class Github {
 
     await this.octokit.issues.createComment(payload);
 
-    console.log(`Added comment: ${chalk.blue(payload.body)}`);
+    if (with_log) {
+      console.log(`Added comment: ${chalk.blue(payload.body)}`);
+    }
   }
 
   async createPullRequest(

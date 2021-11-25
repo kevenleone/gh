@@ -5,11 +5,19 @@ interface ApplicationProperties {
   octokit: Octokit;
 }
 
+interface BranchFileStats {
+  total: string;
+  type: string;
+}
+
 interface Configuration {
   username: string;
   review_signature: string;
   token: string;
   branch_prefix: string;
+  jira_integration: boolean;
+  jira_credential: string;
+  jira_base64: string;
 }
 
 interface GithubOptions {
@@ -18,4 +26,9 @@ interface GithubOptions {
   repo: string;
 }
 
-export type { Configuration, ApplicationProperties, GithubOptions };
+export type {
+  ApplicationProperties,
+  BranchFileStats,
+  Configuration,
+  GithubOptions,
+};
