@@ -108,8 +108,7 @@ export class Commands {
 
     const branchExist = await this.git.verifyBranchExistLocal(newBranch);
 
-    if (branchExist) {
-    } else {
+    if (!branchExist) {
       await this.git.fetch(remoteName, branch, newBranch);
 
       spin.text = `Checkout into branch ${newBranch}`;

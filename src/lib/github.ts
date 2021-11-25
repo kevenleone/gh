@@ -218,7 +218,7 @@ class Github {
   ): Promise<
     RestEndpointMethodTypes["pulls"]["create"]["response"]["data"] | undefined
   > {
-    const head = await Git.getActualBranch();
+    const head = await Git.getCurrentBranch();
 
     const _options = this.getReferenceOptions(options);
 
