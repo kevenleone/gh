@@ -4,17 +4,20 @@ import { ApplicationProperties } from "../interfaces/types";
 import { saveProjectConfig } from "./credentials";
 import { Git } from "./git";
 import { Github } from "./github";
+import { Report } from "./report";
 import { prompts } from "./utils";
 
 export class Commands {
   public applicationProperties: ApplicationProperties;
   public git: Git;
   public github: Github;
+  public report: Report;
 
   constructor(applicationProperties: ApplicationProperties) {
     this.applicationProperties = applicationProperties;
     this.git = new Git();
     this.github = new Github(applicationProperties);
+    this.report = new Report(applicationProperties);
   }
 
   private logShortcut(command: string): void {
@@ -149,12 +152,27 @@ export class Commands {
         owner: user,
       });
     } else if (send) {
-      await this.github.createPullRequest({
+      const payload = {
         base,
         owner: send,
         repo: user,
         title,
-      });
+      };
+
+      const created_pull_request = await this.github.createPullRequest(payload);
+
+      if (created_pull_request) {
+        const report = await this.report.createReport();
+
+        if (report && created_pull_request?.number) {
+          await this.github.createComment(
+            report,
+            created_pull_request.number,
+            payload,
+            false
+          );
+        }
+      }
     } else {
       await this.github.listPullRequest(true, { owner: user });
     }
@@ -390,18 +408,35 @@ export class Commands {
           type: "confirm",
         });
 
-        if (confirm_send_pr) {
-          await this.github.createPullRequest({
-            base: response.reference_branch,
-            owner: username,
-            repo: response.reference_repository,
-            title: response.title,
-          });
-
-          this.logShortcut(`pr -s ${username}`);
-        } else {
-          console.log("Pull Request not Sent");
+        if (!confirm_send_pr) {
+          return console.log("Pull Request not Sent");
         }
+
+        const payload = {
+          base: response.reference_branch,
+          owner: username,
+          repo: response.reference_repository,
+          title: response.title,
+        };
+
+        const created_pull_request = await this.github.createPullRequest(
+          payload
+        );
+
+        if (created_pull_request) {
+          const report = await this.report.createReport();
+
+          if (report && created_pull_request?.number) {
+            await this.github.createComment(
+              report,
+              created_pull_request.number,
+              payload,
+              false
+            );
+          }
+        }
+
+        this.logShortcut(`pr -s ${username}`);
 
         break;
       }
