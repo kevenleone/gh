@@ -1,3 +1,4 @@
+import { BranchFileStats } from "../interfaces/types";
 import { clearStdout } from "./utils";
 
 class Git {
@@ -75,6 +76,63 @@ class Git {
     const branch = await $`git branch --show-current`;
 
     return clearStdout(branch);
+  }
+
+  public async getCurrentBranchCommitMessages(
+    latestCommitId: string
+  ): Promise<string[]> {
+    const commitMessages =
+      await $`git log --pretty=format:%s ${latestCommitId}..HEAD`;
+
+    return commitMessages.stdout.split("\n");
+  }
+
+  public async getCurrentBranchFileStats(
+    latestCommitId: string
+  ): Promise<BranchFileStats[]> {
+    const fileStatus = await $`git diff --stat ${latestCommitId}..HEAD`;
+
+    const fileStatusStdout = fileStatus.stdout.split("\n").filter(Boolean);
+
+    return fileStatusStdout[fileStatusStdout.length - 1]
+      .trim()
+      .split(",")
+      .map((stat) => stat.trim())
+      .map((stat) => {
+        const [total, ...type] = stat.split(" ");
+
+        return {
+          total,
+          type: type.join(" "),
+        };
+      });
+  }
+
+  public async getLatestCommitId(...branchNames: string[]): Promise<string> {
+    if (branchNames.length === 1) {
+      const latestHash = await $`git rev-parse ${branchNames[0]}`;
+
+      return clearStdout(latestHash);
+    }
+
+    let latestCommitId = "";
+    let latestTimestamp = 0;
+
+    for (const branch of branchNames) {
+      const commit_hash =
+        await $`git log -n 1 ${branch} --pretty=format:%H:%cd --date=unix`;
+
+      const [hash, _timestamp] = clearStdout(commit_hash).split(":");
+
+      const timestamp = Number(_timestamp);
+
+      if (timestamp > latestTimestamp) {
+        latestCommitId = hash;
+        latestTimestamp = timestamp;
+      }
+    }
+
+    return latestCommitId;
   }
 
   public async getLastCommitMessage(): Promise<string> {
