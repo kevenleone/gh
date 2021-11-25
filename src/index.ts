@@ -5,11 +5,10 @@ import { Command } from "commander";
 import figlet from "figlet";
 
 import CLI from "./lib/cli";
+import { APP_NAME } from "./lib/constants";
 import { getConfig } from "./lib/credentials";
 import Git from "./lib/git";
 import { getGithubClient } from "./lib/github";
-
-const APP_NAME = process.env.APP_NAME || "GitRay";
 
 /**
  * @description If you want to see what happens under the hoods, use the flag --verbose
@@ -34,7 +33,7 @@ class Application {
     const version = process.env.PACKAGE_VERSION;
 
     console.log(
-      figlet.textSync(APP_NAME as string, {
+      figlet.textSync(APP_NAME, {
         font: "Big",
       })
     );
