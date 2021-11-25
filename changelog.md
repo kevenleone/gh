@@ -1,5 +1,9 @@
 # :book: Changelog
 
+## 2.5.0
+
+- Add Total of new Commits after `sync` command; 
+
 ## 2.4.0
 
 - Add Jira and Git Report as Optional Feature, first you need to configure:
@@ -58,7 +62,7 @@ Note: This is an optional feature, only works for the one working on `Liferay Po
 - dayjs 1.10.6 > 1.10.7
 - @octokit/rest 18.7.0 > 18.10.0
 
-## :tada 1.0.0
+## :tada: 1.0.0
 
 Project startup
 
