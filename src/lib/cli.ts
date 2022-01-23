@@ -87,7 +87,11 @@ class CommandLine {
         "-c, --comment <review comment>",
         "Add Pull Request Reviewing Comment"
       )
-      .option("--no-comment", "No Pull Request Reviewing Comment")
+      .option("--no-comment", "No Pull Request Reviewing Comment", false)
+      .option(
+        "--no-report",
+        "Don't create a Jira Report when a Pull Request is opened"
+      )
       .option("-f, --forward <github username>", "Forward a PR")
       .option("-s, --send [github username]", "Send a PR to this Username")
       .option("-t, --title <pr title>", "Title of Pull Request")

@@ -1,5 +1,10 @@
 # :book: Changelog
 
+
+## 2.6.0
+
+- Add flag to skip Jira Report creation using `--no-report` flag; 
+
 ## 2.5.0
 
 - Add Total of new Commits after `sync` command; 

@@ -123,7 +123,7 @@ export class Commands {
     cmd: any,
     args: string[]
   ): Promise<void> {
-    const { base, comment, forward, send, title, user } = cmd;
+    const { base, comment, forward, report, send, title, user } = cmd;
 
     const arg0 = args[0];
 
@@ -160,12 +160,12 @@ export class Commands {
 
       const created_pull_request = await this.github.createPullRequest(payload);
 
-      if (created_pull_request) {
-        const report = await this.report.createReport();
+      if (created_pull_request && report) {
+        const reportBody = await this.report.createReport();
 
-        if (report && created_pull_request?.number) {
+        if (reportBody && created_pull_request?.number) {
           await this.github.createComment(
-            report,
+            reportBody,
             created_pull_request.number,
             payload,
             false
