@@ -1,5 +1,8 @@
 # :book: Changelog
 
+## 2.7.0
+
+- Check if it's a valid Git Repository; 
 
 ## 2.6.0
 

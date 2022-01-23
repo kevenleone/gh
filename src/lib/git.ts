@@ -2,6 +2,8 @@ import { BranchFileStats } from "../interfaces/types";
 import { clearStdout } from "./utils";
 
 class Git {
+  private DEFAULT_USER_REMOTE = "origin";
+
   public async checkout(branch: string): Promise<void> {
     await $`git checkout ${branch}`;
   }
@@ -123,10 +125,6 @@ class Git {
     return clearStdout(commitMessage);
   }
 
-  public async push(branch: string): Promise<void> {
-    await $`git push --set-upstream origin ${branch} --force`;
-  }
-
   public async getOriginRemote(): Promise<string[]> {
     const remote_origin = await $`git config --get remote.origin.url`;
 
@@ -155,6 +153,19 @@ class Git {
       });
 
     return remoteList;
+  }
+
+  public async isProjectUsingGit(): Promise<boolean> {
+    const gitDir = await nothrow($`git rev-parse --git-dir`);
+
+    return gitDir.exitCode === 0;
+  }
+
+  public async push(
+    branch: string,
+    remote: string = this.DEFAULT_USER_REMOTE
+  ): Promise<void> {
+    await $`git push --set-upstream ${remote} ${branch} --force`;
   }
 
   /**

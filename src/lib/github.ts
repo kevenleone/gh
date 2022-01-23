@@ -15,14 +15,6 @@ interface Options {
   title?: string;
 }
 
-async function getGithubClient(auth: string): Promise<Octokit> {
-  const octokit = new Octokit({
-    auth,
-  });
-
-  return octokit;
-}
-
 class Github {
   private readonly octokit: Octokit;
   private readonly config;
@@ -42,6 +34,14 @@ class Github {
     this.me = config.username || "";
     this.owner = owner || this.me;
     this.repo = repo || "";
+  }
+
+  static async getGithubClient(auth: string): Promise<Octokit> {
+    const octokit = new Octokit({
+      auth,
+    });
+
+    return octokit;
   }
 
   private getReferenceOptions(options: Options = {}): Options {
@@ -269,4 +269,4 @@ class Github {
   }
 }
 
-export { getGithubClient, Github };
+export { Github };

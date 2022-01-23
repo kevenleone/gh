@@ -8,7 +8,7 @@ import CLI from "./lib/cli";
 import { APP_NAME } from "./lib/constants";
 import { getConfig } from "./lib/credentials";
 import Git from "./lib/git";
-import { getGithubClient } from "./lib/github";
+import { Github } from "./lib/github";
 
 /**
  * @description If you want to see what happens under the hoods, use the flag --verbose
@@ -51,10 +51,20 @@ class Application {
    */
 
   public async init(): Promise<void> {
+    const isValidGitRepository = await Git.isProjectUsingGit();
+
+    if (!isValidGitRepository) {
+      return console.error(
+        `Not a git repository (or any of the parent directories): ${chalk.red(
+          ".git not found"
+        )}`
+      );
+    }
+
     const config = await getConfig();
 
     const [octokit, [owner, repo]] = await Promise.all([
-      getGithubClient(config.token),
+      Github.getGithubClient(config.token),
       Git.getOriginRemote(),
     ]);
 
