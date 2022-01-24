@@ -125,4 +125,4 @@ async function saveProjectConfig(
   await saveConfiguration(config);
 }
 
-export { getConfig, saveProjectConfig, askConfiguration };
+export { askConfiguration, getConfig, saveProjectConfig };

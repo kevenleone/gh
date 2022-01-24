@@ -1,5 +1,9 @@
 # :book: Changelog
 
+## 2.8.0
+
+- Upgrade devDependencies; 
+
 ## 2.7.0
 
 - Check if it's a valid Git Repository; 
