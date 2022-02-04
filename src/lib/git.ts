@@ -128,7 +128,11 @@ class Git {
   public async getOriginRemote(): Promise<string[]> {
     const remote_origin = await $`git config --get remote.origin.url`;
 
-    return remote_origin.stdout.replace(".git\n", "").split("/").slice(-2);
+    return remote_origin.stdout
+      .replace(".git\n", "")
+      .split("/")
+      .slice(-2)
+      .map((element) => element.trim());
   }
 
   public async getOrigins(): Promise<{ name: string; alias: string }[]> {

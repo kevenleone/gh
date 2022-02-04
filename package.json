@@ -47,5 +47,5 @@
     "start": "./dist/index.js",
     "watch": "tsc -w"
   },
-  "version": "2.8.0"
+  "version": "2.9.0"
 }

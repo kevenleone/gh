@@ -1,5 +1,9 @@
 # :book: Changelog
 
+## 2.9.0
+
+- Fix bug to list and send PR 
+
 ## 2.8.0
 
 - Upgrade devDependencies; 
