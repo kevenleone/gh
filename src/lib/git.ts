@@ -1,5 +1,5 @@
-import { BranchFileStats } from "../interfaces/types";
-import { clearStdout } from "./utils";
+import { BranchFileStats } from "../interfaces/types.js";
+import { clearStdout } from "./utils.js";
 
 class Git {
   private DEFAULT_USER_REMOTE = "origin";

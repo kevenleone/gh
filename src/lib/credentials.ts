@@ -1,5 +1,5 @@
-import { Configuration } from "../interfaces/types";
-import { prompts } from "./utils";
+import { Configuration } from "../interfaces/types.js";
+import { prompts } from "./utils.js";
 
 const configFile = os.homedir() + "/.gh.github.json";
 

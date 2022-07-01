@@ -1,10 +1,10 @@
 import { Command } from "commander";
 
-import { ApplicationProperties } from "../interfaces/types";
-import { Commands } from "./commands";
-import { askConfiguration } from "./credentials";
-import { Git } from "./git";
-import { prompts } from "./utils";
+import { ApplicationProperties } from "../interfaces/types.js";
+import { Commands } from "./commands.js";
+import { askConfiguration } from "./credentials.js";
+import { Git } from "./git.js";
+import { prompts } from "./utils.js";
 
 class CommandLine {
   private applicationProperties: ApplicationProperties;

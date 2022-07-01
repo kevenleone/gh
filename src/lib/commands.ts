@@ -1,11 +1,11 @@
 import spinner from "ora";
 
-import { ApplicationProperties } from "../interfaces/types";
-import { saveProjectConfig } from "./credentials";
-import { Git } from "./git";
-import { Github } from "./github";
-import { Report } from "./report";
-import { prompts } from "./utils";
+import { ApplicationProperties } from "../interfaces/types.js";
+import { saveProjectConfig } from "./credentials.js";
+import { Git } from "./git.js";
+import { Github } from "./github.js";
+import { Report } from "./report.js";
+import { prompts } from "./utils.js";
 
 export class Commands {
   public applicationProperties: ApplicationProperties;

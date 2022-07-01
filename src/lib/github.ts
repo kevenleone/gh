@@ -3,9 +3,9 @@ import Table from "cli-table3";
 import open from "open";
 import spinner from "ora";
 
-import { ApplicationProperties } from "../interfaces/types";
-import Git from "./git";
-import { getTimeFromNow } from "./utils";
+import { ApplicationProperties } from "../interfaces/types.js";
+import Git from "./git.js";
+import { getTimeFromNow } from "./utils.js";
 
 interface Options {
   base?: string;

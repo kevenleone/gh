@@ -1,4 +1,4 @@
-import { ApplicationProperties } from "src/interfaces/types";
+import { ApplicationProperties } from "src/interfaces/types.js";
 
 /* eslint-disable no-labels */
 class Jira {
