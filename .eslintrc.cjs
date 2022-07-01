@@ -6,7 +6,8 @@ module.exports = {
   extends: [
     "standard",
     "plugin:@typescript-eslint/recommended",
-    "prettier",
+    "prettier/@typescript-eslint",
+    "prettier/standard",
     "plugin:prettier/recommended",
   ],
   parser: "@typescript-eslint/parser",
@@ -30,8 +31,7 @@ module.exports = {
     "no-explicit-any": "off",
     "no-use-before-define": "off",
     semi: ["error", "always"],
-    "simple-import-sort/exports": "error",
-    "simple-import-sort/imports": "error",
+    "simple-import-sort/sort": "error",
     "sort-destructure-keys/sort-destructure-keys": [
       2,
       { caseSensitive: false },
