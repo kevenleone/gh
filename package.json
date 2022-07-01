@@ -1,7 +1,7 @@
 {
   "author": "Keven Leone <keven.leone@liferay.com>",
   "bin": {
-    "gh": "bin/gitray.cjs"
+    "gitray": "bin/gitray.cjs"
   },
   "devDependencies": {
     "@types/figlet": "^1.5.4",
