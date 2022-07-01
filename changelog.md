@@ -1,5 +1,12 @@
 # :book: Changelog
 
+## 3.0.0 - BREAKING CHANGE
+
+- Upgrade google@zx to 7.0x
+- Move from commonJS to EsModules
+- Eslint is now working again
+- **IMPORTANT** this version causes a breaking changes due the need to move from commonJS to ESModules, for those who uses a version before 3.0.x needs to run `yarn unlink gitray` and then `yarn link`.
+
 ## 2.9.0
 
 - Fix bug to list and send PR 
