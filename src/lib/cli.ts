@@ -104,6 +104,13 @@ class CommandLine {
       });
 
     this.cli
+      .command("update")
+      .description("Update Gitray")
+      .action(async () => {
+        this.git.updateGitray();
+      });
+
+    this.cli
       .command("sync")
       .description(
         "Syncronize your fork(origin) with latest code from Upstream"
@@ -113,6 +120,8 @@ class CommandLine {
       });
 
     this.cli.parse(process.argv.filter((argv) => argv !== "--verbose"));
+
+    return Promise.resolve();
   }
 }
 

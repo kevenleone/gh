@@ -1,5 +1,10 @@
 # :book: Changelog
 
+## 3.1.0
+
+- Add Version Notifier
+- Add command to update gitray version
+
 ## 3.0.0 - BREAKING CHANGE
 
 - Upgrade google@zx to 7.0x

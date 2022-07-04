@@ -9,12 +9,15 @@ import { APP_NAME } from "./lib/constants.js";
 import { getConfig } from "./lib/credentials.js";
 import Git from "./lib/git.js";
 import { Github } from "./lib/github.js";
+import Notifier from "./lib/notifier.js";
 
 /**
  * @description If you want to see what happens under the hoods, use the flag --verbose
  */
 
 $.verbose = process.argv.includes("--verbose");
+
+const version = process.env.PACKAGE_VERSION;
 
 class Application {
   public cli: Command;
@@ -30,8 +33,6 @@ class Application {
    */
 
   private welcome(): void {
-    const version = process.env.PACKAGE_VERSION;
-
     console.log(
       figlet.textSync(APP_NAME, {
         font: "Big",
@@ -40,8 +41,6 @@ class Application {
 
     if (version) {
       this.cli.version(version, "-v", `Display ${APP_NAME} Version`);
-
-      console.log(`CLI Version: ${version}`);
     }
   }
 
@@ -60,6 +59,10 @@ class Application {
         )}`
       );
     }
+
+    const notifier = new Notifier(version as string);
+
+    await notifier.checkVersionAndNotify();
 
     const config = await getConfig();
 

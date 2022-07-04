@@ -214,6 +214,48 @@ class Git {
     );
   }
 
+  async updateGitray(): Promise<void> {
+    const gitrayPath = process.env.GITRAY_PATH;
+
+    if (!gitrayPath) {
+      return;
+    }
+
+    const currentChanges = await $`git diff --shortstat`;
+
+    within(async () => {
+      cd(gitrayPath);
+
+      const currentBranch = await this.getCurrentBranch();
+
+      const hasChanges = !!currentChanges.stdout.trim();
+
+      if (hasChanges) {
+        return console.warn(
+          chalk.red(
+            `Is not possible to Update ${process.env.APP_NAME} with changes/staged, stash or remove the changes and try again.`
+          )
+        );
+      }
+
+      await $`git pull --rebase origin ${currentBranch}`;
+
+      const yarnVersion = await $`yarn -v`;
+
+      $.verbose = true;
+
+      await within(async () => {
+        if (yarnVersion.stdout.trim()) {
+          await $`yarn build`;
+        } else {
+          await $`npm run build`;
+        }
+      });
+
+      console.log(`${process.env.APP_NAME} Update Completed`);
+    });
+  }
+
   public async verifyBranchExistLocal(branch: string): Promise<boolean> {
     const branchExist = await nothrow($`git rev-parse --verify ${branch}`);
 
