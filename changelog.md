@@ -1,5 +1,9 @@
 # :book: Changelog
 
+## 3.1.1
+
+- Rename credentials > config and make it a Static Class
+
 ## 3.1.0
 
 - Add Version Notifier

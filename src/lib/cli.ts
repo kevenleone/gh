@@ -2,7 +2,7 @@ import { Command } from "commander";
 
 import { ApplicationProperties } from "../interfaces/types.js";
 import { Commands } from "./commands.js";
-import { askConfiguration } from "./credentials.js";
+import Config from "./config.js";
 import { Git } from "./git.js";
 import { prompts } from "./utils.js";
 
@@ -59,7 +59,7 @@ class CommandLine {
         "Configure Gitray with Github Credentials and desired options"
       )
       .action(async () => {
-        await askConfiguration(this.applicationProperties.config.config);
+        await Config.askConfiguration(this.applicationProperties.config.config);
       });
 
     this.cli

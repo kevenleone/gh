@@ -1,7 +1,7 @@
 import spinner from "ora";
 
 import { ApplicationProperties } from "../interfaces/types.js";
-import { saveProjectConfig } from "./credentials.js";
+import Config from "./config.js";
 import { Git } from "./git.js";
 import { Github } from "./github.js";
 import { Report } from "./report.js";
@@ -397,7 +397,7 @@ export class Commands {
         const username = isOtherUser ? response.username : response.send_pr_to;
 
         if (isOtherUser) {
-          await saveProjectConfig(repo, username, origins);
+          await Config.saveProjectConfig(repo, username, origins);
         }
 
         const { confirm_send_pr } = await prompts({

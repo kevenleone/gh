@@ -5,8 +5,8 @@ import { Command } from "commander";
 import figlet from "figlet";
 
 import CLI from "./lib/cli.js";
+import Config from "./lib/config.js";
 import { APP_NAME } from "./lib/constants.js";
-import { getConfig } from "./lib/credentials.js";
 import Git from "./lib/git.js";
 import { Github } from "./lib/github.js";
 import Notifier from "./lib/notifier.js";
@@ -64,7 +64,7 @@ class Application {
 
     await notifier.checkVersionAndNotify();
 
-    const config = await getConfig();
+    const config = await Config.getConfig();
 
     const [octokit, [owner, repo]] = await Promise.all([
       Github.getGithubClient(config.token),
