@@ -82,7 +82,7 @@ class Jira {
 
   public async validateJIRAProjectNames(
     commitMessages: string[]
-  ): Promise<void> {
+  ): Promise<boolean> {
     outerLoop: for (const commitMessage of commitMessages) {
       if (
         commitMessage.startsWith("Revert ") ||
@@ -94,19 +94,23 @@ class Jira {
       }
 
       for (const projectName of this.projectNames) {
-        if (commitMessage.includes(projectName)) {
+        if (commitMessage.startsWith(projectName)) {
           continue outerLoop;
         }
       }
 
       console.error(
-        chalk.red(`\nFound formatting issues: ${chalk.white(commitMessage)}
-      ${chalk.magenta(
+        chalk.red(`\nFound formatting issue: ${chalk.white(commitMessage)}
+      ${chalk.yellow(
         "At least one commit message is missing a reference to a required JIRA project:"
       )}
       ${chalk.green(this.projectNames.join(", "))}`)
       );
+
+      return false;
     }
+
+    return true;
   }
 }
 

@@ -1,5 +1,9 @@
 # :book: Changelog
 
+## 3.2.0
+
+- Add Check Command Validation for Commit Message ONLY for `Liferay Portal`
+
 ## 3.1.1
 
 - Rename credentials > config and make it a Static Class

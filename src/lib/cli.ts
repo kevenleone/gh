@@ -1,6 +1,7 @@
 import { Command } from "commander";
 
 import { ApplicationProperties } from "../interfaces/types.js";
+import Check from "./check.js";
 import { Commands } from "./commands.js";
 import Config from "./config.js";
 import { Git } from "./git.js";
@@ -8,15 +9,18 @@ import { prompts } from "./utils.js";
 
 class CommandLine {
   private applicationProperties: ApplicationProperties;
-  private git: Git;
+  private check: Check;
   private cli: Command;
   private commands: Commands;
+  private git: Git;
 
   constructor(cli: Command, applicationProperties: ApplicationProperties) {
     this.applicationProperties = applicationProperties;
+    this.check = new Check(applicationProperties);
     this.cli = cli;
-    this.git = new Git();
     this.commands = new Commands(applicationProperties);
+    this.commands = new Commands(applicationProperties);
+    this.git = new Git();
   }
 
   /**
@@ -30,7 +34,7 @@ class CommandLine {
   public async createCLI(): Promise<void> {
     this.cli
       .command("cli")
-      .description("Use Guided way to use GitRay")
+      .description("Guided way to use GitRay")
       .action(async () => {
         const response = await prompts({
           choices: [
@@ -47,10 +51,17 @@ class CommandLine {
         });
 
         if (response.value === "pr") {
-          await this.commands.workflowForPullRequestOnboard();
-        } else {
-          await this.commands.workflowForFetchOnboard();
+          return this.commands.workflowForPullRequestOnboard();
         }
+
+        await this.commands.workflowForFetchOnboard();
+      });
+
+    this.cli
+      .command("check")
+      .description("Check PR Commit Messages, before sending a PR")
+      .action(() => {
+        this.check.verify();
       });
 
     this.cli
@@ -62,19 +73,23 @@ class CommandLine {
         await Config.askConfiguration(this.applicationProperties.config.config);
       });
 
-    this.cli
-      .command("fetch")
-      .description("Use to fetch data from a specific remote")
-      .action(async () => {
-        await this.commands.workflowForFetchDry();
-      });
+    /**
+     * Disabled, since not working yet.
+     */
 
-    this.cli
-      .command("issues")
-      .description("Use to manage Issues from Github")
-      .action(() => {
-        console.log("Disabled for now");
-      });
+    // this.cli
+    //   .command("fetch")
+    //   .description("Use to fetch data from a specific remote")
+    //   .action(async () => {
+    //     await this.commands.workflowForFetchDry();
+    //   });
+
+    // this.cli
+    //   .command("issues")
+    //   .description("Use to manage Issues from Github")
+    //   .action(() => {
+    //     console.log("Disabled for now");
+    //   });
 
     this.cli
       .command("pr")
@@ -106,7 +121,7 @@ class CommandLine {
     this.cli
       .command("update")
       .description("Update Gitray")
-      .action(async () => {
+      .action(() => {
         this.git.updateGitray();
       });
 

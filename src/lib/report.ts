@@ -1,7 +1,6 @@
 import spinner from "ora";
 import { ApplicationProperties, BranchFileStats } from "src/interfaces/types";
 
-import { APP_NAME } from "./constants.js";
 import { Git } from "./git.js";
 import { Jira } from "./jira.js";
 
@@ -102,7 +101,7 @@ class Report {
       return "";
     }
 
-    const spin = spinner(`Creating ${APP_NAME} Report Template`);
+    const spin = spinner(`Creating ${process.env.APP_NAME} Report Template`);
 
     spin.color = "green";
     spin.start();
@@ -112,8 +111,8 @@ class Report {
 
       const latestCommitId = await this.git.getLatestCommitId(
         "master",
-        `origin/master`,
-        `upstream/master`
+        "origin/master",
+        "upstream/master"
       );
 
       const commits = await this.git.getCurrentBranchCommitMessages(

@@ -19,6 +19,8 @@ class Liferay {
     "TR",
   ];
 
+  public static repositories = ["liferay-portal", "liferay-portal-ee"];
+
   public validateCommitPrefix(commit: string | string[]): boolean {
     return !!this.JIRA_PROJECTS.filter((jira_project) =>
       Array.isArray(commit)
